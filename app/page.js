@@ -94,7 +94,6 @@ export default function Home() {
       <section id="booking" ref={bookingRef} className="px-6 py-16">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-2xl sm:text-3xl font-bold">Choisir une date et un créneau</h2>
-          <p className="mt-2 text-gray-300">Semaine: 12:00–13:00 & 19:00–20:00 · Week-end: 19:00–21:00</p>
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <div>
