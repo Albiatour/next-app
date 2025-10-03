@@ -71,7 +71,7 @@ export default function Home() {
           <p className="text-sm text-zinc-500 mb-6">Prototype Next.js + Vercel — by Alexandre</p>
           <button
             onClick={handleScrollToBooking}
-            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
+            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
           >
             Réserver
           </button>
@@ -106,7 +106,7 @@ export default function Home() {
                           key={s}
                           type="button"
                           onClick={() => setSelectedSlot(s)}
-                          className={`w-full rounded-full border px-3 py-2 text-sm text-zinc-800 shadow-sm hover:border-zinc-300 transition ${isActive ? 'bg-violet-600 text-white border-violet-500' : 'border-zinc-200 bg-white'}`}
+                          className={`w-full rounded-full border px-3 py-2 text-sm text-zinc-800 shadow-sm hover:border-zinc-300 transition ${isActive ? 'bg-white border-emerald-500 ring-2 ring-emerald-300' : 'border-zinc-200 bg-white'}`}
                         >
                           {s}
                         </button>
@@ -135,7 +135,7 @@ export default function Home() {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300"
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
                   placeholder="Alexandre"
                 />
               </FormField>
@@ -150,7 +150,7 @@ export default function Home() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300"
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
                   placeholder="Dupont"
                 />
               </FormField>
@@ -165,7 +165,7 @@ export default function Home() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300"
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
                   placeholder="vous@example.com"
                 />
               </FormField>
@@ -179,7 +179,7 @@ export default function Home() {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300"
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
                   placeholder="06 12 34 56 78"
                 />
               </FormField>
@@ -201,7 +201,7 @@ export default function Home() {
               <div className="md:col-span-2">
                 <button
                   type="submit"
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
                 >
                   Confirmer ma réservation
                 </button>
@@ -313,7 +313,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
                 onClick={() => onSelect(new Date(d))}
                 role="option"
                 aria-selected={active}
-                className={`min-w-[70px] snap-start rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center shadow-sm flex flex-col items-center gap-0.5 ${active ? 'ring-2 ring-violet-400 border-violet-300' : ''}`}
+                className={`min-w-[70px] snap-start rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center shadow-sm flex flex-col items-center gap-0.5 ${active ? 'ring-2 ring-emerald-300 border-emerald-300' : ''}`}
               >
                 <div className="text-[11px] leading-4 text-zinc-500">{shortDay(d)}</div>
                 <div className="text-lg font-bold leading-5 text-zinc-800">{d.getDate()}</div>
