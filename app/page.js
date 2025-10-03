@@ -56,6 +56,13 @@ export default function Home() {
     return Object.keys(nextErrors).length === 0
   }
 
+  const handleCoversChange = (e) => {
+    const value = e.target.value
+    // Ne garder que les chiffres
+    const numericValue = value.replace(/[^0-9]/g, '')
+    setCovers(numericValue)
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
@@ -172,8 +179,13 @@ export default function Home() {
                 label="Nombre de couverts" 
                 type="number" 
                 required 
+                min="1"
+                max="20"
+                step="1"
+                pattern="[0-9]+"
+                inputMode="numeric"
                 value={covers} 
-                onChange={(e) => setCovers(e.target.value)} 
+                onChange={handleCoversChange} 
                 error={errors.covers} 
               />
               <TextareaField 

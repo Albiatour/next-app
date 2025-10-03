@@ -1,6 +1,6 @@
 "use client"
 
-export function InputField({ id, label, type = "text", value, onChange, required, placeholder, error, className = "", autoComplete }) {
+export function InputField({ id, label, type = "text", value, onChange, required, placeholder, error, className = "", autoComplete, min, max, step, pattern, inputMode }) {
   return (
     <div className={"relative mt-6 " + className}>
       <input
@@ -11,6 +11,11 @@ export function InputField({ id, label, type = "text", value, onChange, required
         required={required}
         autoComplete={autoComplete}
         placeholder=" "
+        min={min}
+        max={max}
+        step={step}
+        pattern={pattern}
+        inputMode={inputMode}
         className={[
           "peer w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900",
           "shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset focus:border-emerald-500",
