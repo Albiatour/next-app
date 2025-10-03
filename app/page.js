@@ -61,50 +61,41 @@ export default function Home() {
     router.push(url)
   }
 
-  const violet = '#166534'
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 text-gray-900">
+    <main className="min-h-[100svh] w-full bg-zinc-50">
       <style>{`html{scroll-behavior:smooth}.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
-      {/* HERO */}
-      <section className="px-4 py-10">
-        <div className="mx-auto w-full max-w-screen-sm px-0 py-0 md:max-w-screen-md lg:max-w-screen-lg text-center">
-          <h1 className="text-2xl font-bold md:text-4xl">Réservations IA pour restaurants</h1>
-          <p className="mt-3 text-sm text-gray-600 md:text-base">Prototype Next.js + Vercel — by Alexandre</p>
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <button
-              onClick={handleScrollToBooking}
-              className="w-full md:w-auto inline-flex items-center justify-center rounded-xl px-6 py-3 text-base font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2"
-              style={{ backgroundColor: violet }}
-            >
-              Réserver
-            </button>
-          </div>
-        </div>
-      </section>
+      <div className="mx-auto w-full max-w-screen-sm px-4 py-6 md:max-w-screen-md lg:max-w-screen-lg">
+        {/* HERO */}
+        <section className="text-center mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-zinc-800 mb-2">Réservations IA pour restaurants</h1>
+          <p className="text-sm text-zinc-500 mb-6">Prototype Next.js + Vercel — by Alexandre</p>
+          <button
+            onClick={handleScrollToBooking}
+            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
+          >
+            Réserver
+          </button>
+        </section>
 
-      {/* BOOKING */}
-      <section id="booking" ref={bookingRef} className="px-4 py-10 scroll-mt-20 md:scroll-mt-24">
-        <div className="mx-auto w-full max-w-screen-sm px-0 md:max-w-screen-md lg:max-w-screen-lg">
-          <h2 className="text-xl font-bold md:text-2xl">Choisir une date et un créneau</h2>
+        {/* BOOKING */}
+        <section id="booking" ref={bookingRef} className="mb-8 scroll-mt-20">
+          <h2 className="text-xl font-bold text-zinc-800 mb-4">Choisir une date et un créneau</h2>
 
-          <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <span className="block text-sm font-medium text-gray-800">Date</span>
-              <div className="mt-2">
-                <DaysScroller
-                  selected={selectedDate}
-                  onSelect={(d) => { setSelectedDate(d); setSelectedSlot('') }}
-                />
-              </div>
-              {errors.date && <p className="mt-2 text-sm text-red-600">{errors.date}</p>}
+              <label className="text-xs font-medium text-zinc-500 mb-1 block">Date</label>
+              <DaysScroller
+                selected={selectedDate}
+                onSelect={(d) => { setSelectedDate(d); setSelectedSlot('') }}
+              />
+              {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
             </div>
 
             <div>
-              <span className="block text-sm font-medium text-gray-800">Créneaux disponibles</span>
-              <div className="mt-2 min-h-[48px]">
+              <label className="text-xs font-medium text-zinc-500 mb-1 block">Créneaux disponibles</label>
+              <div className="min-h-[48px]">
                 {!selectedDate && (
-                  <p className="text-gray-500">Choisissez d&apos;abord une date</p>
+                  <p className="text-sm text-zinc-400">Choisissez d&apos;abord une date</p>
                 )}
                 {selectedDate && (
                   <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
@@ -115,7 +106,7 @@ export default function Home() {
                           key={s}
                           type="button"
                           onClick={() => setSelectedSlot(s)}
-                          className={`w-full rounded-full border px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-emerald-700 border-emerald-600 text-white' : 'bg-transparent border-gray-300 text-gray-800 hover:bg-gray-100'}`}
+                          className={`w-full rounded-full border px-3 py-2 text-sm text-zinc-800 shadow-sm hover:border-zinc-300 transition ${isActive ? 'bg-violet-600 text-white border-violet-500' : 'border-zinc-200 bg-white'}`}
                         >
                           {s}
                         </button>
@@ -123,93 +114,120 @@ export default function Home() {
                     })}
                   </div>
                 )}
-                {errors.slot && <p className="mt-2 text-sm text-red-600">{errors.slot}</p>}
+                {errors.slot && <p className="mt-1 text-xs text-red-600">{errors.slot}</p>}
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FORM */}
-      <section className="px-4 pb-24">
-        <div className="mx-auto w-full max-w-screen-sm px-0 md:max-w-screen-md lg:max-w-screen-lg rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
-          <h3 className="text-lg font-semibold text-gray-900 md:text-xl">Vos informations</h3>
-          <form onSubmit={handleSubmit} className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Prénom</label>
-              <input
-                id="firstName"
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
-                placeholder="Alexandre"
-              />
-              {errors.firstName && <p className="mt-2 text-sm text-red-600">{errors.firstName}</p>}
-            </div>
-            <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Nom</label>
-              <input
-                id="lastName"
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
-                placeholder="Dupont"
-              />
-              {errors.lastName && <p className="mt-2 text-sm text-red-600">{errors.lastName}</p>}
-            </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
-                placeholder="vous@example.com"
-              />
-              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
-            </div>
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Téléphone</label>
-              <input
-                id="phone"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
-                placeholder="06 12 34 56 78"
-              />
-              {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone}</p>}
-            </div>
-            <div className="sm:col-span-2">
-              <label htmlFor="comments" className="block text-sm font-medium text-gray-700">Commentaires</label>
-              <textarea
-                id="comments"
-                rows={4}
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
-                placeholder="Allergies, préférences, nombre de personnes, etc."
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <button
-                type="submit"
-                className="w-full rounded-xl px-6 py-3 text-base font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2"
-                style={{ backgroundColor: violet }}
+        {/* FORM */}
+        <section className="mb-8">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-md">
+            <h3 className="text-lg font-semibold text-zinc-800 mb-4">Vos informations</h3>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+              <FormField
+                label="Prénom"
+                required
+                error={errors.firstName}
               >
-                Confirmer ma réservation
-              </button>
-              <p className="mt-2 text-sm text-gray-600">La date et le créneau sélectionnés seront confirmés à l&apos;étape suivante.</p>
-            </div>
-          </form>
-        </div>
-      </section>
-      <div className="pb-[env(safe-area-inset-bottom)]" />
+                <input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300"
+                  placeholder="Alexandre"
+                />
+              </FormField>
+
+              <FormField
+                label="Nom"
+                required
+                error={errors.lastName}
+              >
+                <input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300"
+                  placeholder="Dupont"
+                />
+              </FormField>
+
+              <FormField
+                label="Email"
+                required
+                error={errors.email}
+              >
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300"
+                  placeholder="vous@example.com"
+                />
+              </FormField>
+
+              <FormField
+                label="Téléphone"
+                error={errors.phone}
+              >
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300"
+                  placeholder="06 12 34 56 78"
+                />
+              </FormField>
+
+              <FormField
+                label="Commentaires"
+                className="md:col-span-2"
+              >
+                <textarea
+                  id="comments"
+                  rows={4}
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300 min-h-[96px]"
+                  placeholder="Allergies, préférences, nombre de personnes, etc."
+                />
+              </FormField>
+
+              <div className="md:col-span-2">
+                <button
+                  type="submit"
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                >
+                  Confirmer ma réservation
+                </button>
+                <p className="mt-2 text-xs text-zinc-500">La date et le créneau sélectionnés seront confirmés à l&apos;étape suivante.</p>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <div className="pb-[env(safe-area-inset-bottom)]" />
+      </div>
     </main>
+  )
+}
+
+// FormField component
+function FormField({ label, required, error, children, className = "" }) {
+  return (
+    <div className={className}>
+      <label className="text-xs font-medium text-zinc-500 mb-1 block">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      {children}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
   )
 }
 
@@ -218,7 +236,6 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
   const containerRef = useRef(null)
   const [canLeft, setCanLeft] = useState(false)
   const [canRight, setCanRight] = useState(true)
-  const violet = '#166534'
 
   const days = useMemo(() => {
     const arr = []
@@ -276,7 +293,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
         aria-label="Précédent"
         onClick={() => scrollByPage(-1)}
         disabled={!canLeft}
-        className="h-9 w-9 rounded-full border border-zinc-700 disabled:opacity-40"
+        className="h-9 w-9 rounded-full border border-zinc-300 bg-white disabled:opacity-40"
       >
         ←
       </button>
@@ -296,12 +313,11 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
                 onClick={() => onSelect(new Date(d))}
                 role="option"
                 aria-selected={active}
-                className={`snap-start shrink-0 min-w-[68px] px-2 py-2 rounded-xl border text-center flex flex-col gap-0.5 ${active ? 'bg-emerald-700 border-emerald-600 text-white' : 'bg-zinc-100 border-zinc-300 text-zinc-800 hover:bg-zinc-200'}`}
-                style={{ outlineColor: violet }}
+                className={`min-w-[70px] snap-start rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center shadow-sm flex flex-col items-center gap-0.5 ${active ? 'ring-2 ring-violet-400 border-violet-300' : ''}`}
               >
-                <div className="text-[11px] leading-4">{shortDay(d)}</div>
-                <div className="text-xl font-bold leading-5">{d.getDate()}</div>
-                <div className="text-[11px] leading-4 opacity-90">{shortMonth(d)}</div>
+                <div className="text-[11px] leading-4 text-zinc-500">{shortDay(d)}</div>
+                <div className="text-lg font-bold leading-5 text-zinc-800">{d.getDate()}</div>
+                <div className="text-[11px] leading-4 text-zinc-500">{shortMonth(d)}</div>
               </button>
             )
           })}
@@ -312,7 +328,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
         aria-label="Suivant"
         onClick={() => scrollByPage(1)}
         disabled={!canRight}
-        className="h-9 w-9 rounded-full border border-zinc-700 disabled:opacity-40"
+        className="h-9 w-9 rounded-full border border-zinc-300 bg-white disabled:opacity-40"
       >
         →
       </button>
