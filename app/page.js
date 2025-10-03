@@ -64,13 +64,13 @@ export default function Home() {
   const violet = '#166534'
 
   return (
-    <main className="min-h-[100svh] w-full bg-zinc-50 text-zinc-100 bg-gradient-to-b from-zinc-950 to-zinc-900">
+    <main className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 text-gray-900">
       <style>{`html{scroll-behavior:smooth}.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
       {/* HERO */}
       <section className="px-4 py-10">
         <div className="mx-auto w-full max-w-screen-sm px-0 py-0 md:max-w-screen-md lg:max-w-screen-lg text-center">
           <h1 className="text-2xl font-bold md:text-4xl">Réservations IA pour restaurants</h1>
-          <p className="mt-3 text-sm text-zinc-300 md:text-base">Prototype Next.js + Vercel — by Alexandre</p>
+          <p className="mt-3 text-sm text-gray-600 md:text-base">Prototype Next.js + Vercel — by Alexandre</p>
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
               onClick={handleScrollToBooking}
@@ -90,21 +90,21 @@ export default function Home() {
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <div>
-              <span className="block text-sm font-medium text-zinc-200">Date</span>
+              <span className="block text-sm font-medium text-gray-800">Date</span>
               <div className="mt-2">
                 <DaysScroller
                   selected={selectedDate}
                   onSelect={(d) => { setSelectedDate(d); setSelectedSlot('') }}
                 />
               </div>
-              {errors.date && <p className="mt-2 text-sm text-red-400">{errors.date}</p>}
+              {errors.date && <p className="mt-2 text-sm text-red-600">{errors.date}</p>}
             </div>
 
             <div>
-              <span className="block text-sm font-medium text-zinc-200">Créneaux disponibles</span>
+              <span className="block text-sm font-medium text-gray-800">Créneaux disponibles</span>
               <div className="mt-2 min-h-[48px]">
                 {!selectedDate && (
-                  <p className="text-zinc-400">Choisissez d&apos;abord une date</p>
+                  <p className="text-gray-500">Choisissez d&apos;abord une date</p>
                 )}
                 {selectedDate && (
                   <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
@@ -115,7 +115,7 @@ export default function Home() {
                           key={s}
                           type="button"
                           onClick={() => setSelectedSlot(s)}
-                          className={`w-full rounded-full border px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-emerald-700 border-emerald-600 text-white' : 'bg-zinc-900 border-zinc-700 text-zinc-100 hover:border-zinc-500'}`}
+                          className={`w-full rounded-full border px-3 py-2 text-sm font-medium transition ${isActive ? 'bg-emerald-700 border-emerald-600 text-white' : 'bg-transparent border-gray-300 text-gray-800 hover:bg-gray-100'}`}
                         >
                           {s}
                         </button>
@@ -123,7 +123,7 @@ export default function Home() {
                     })}
                   </div>
                 )}
-                {errors.slot && <p className="mt-2 text-sm text-red-400">{errors.slot}</p>}
+                {errors.slot && <p className="mt-2 text-sm text-red-600">{errors.slot}</p>}
               </div>
             </div>
           </div>
@@ -132,65 +132,65 @@ export default function Home() {
 
       {/* FORM */}
       <section className="px-4 pb-24">
-        <div className="mx-auto w-full max-w-screen-sm px-0 md:max-w-screen-md lg:max-w-screen-lg rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4 md:p-6 shadow-xl">
-          <h3 className="text-lg font-semibold text-zinc-100 md:text-xl">Vos informations</h3>
+        <div className="mx-auto w-full max-w-screen-sm px-0 md:max-w-screen-md lg:max-w-screen-lg rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
+          <h3 className="text-lg font-semibold text-gray-900 md:text-xl">Vos informations</h3>
           <form onSubmit={handleSubmit} className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-zinc-200">Prénom</label>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Prénom</label>
               <input
                 id="firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-zinc-100 placeholder-zinc-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="Alexandre"
               />
-              {errors.firstName && <p className="mt-2 text-sm text-red-400">{errors.firstName}</p>}
+              {errors.firstName && <p className="mt-2 text-sm text-red-600">{errors.firstName}</p>}
             </div>
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-zinc-200">Nom</label>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Nom</label>
               <input
                 id="lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-zinc-100 placeholder-zinc-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="Dupont"
               />
-              {errors.lastName && <p className="mt-2 text-sm text-red-400">{errors.lastName}</p>}
+              {errors.lastName && <p className="mt-2 text-sm text-red-600">{errors.lastName}</p>}
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-zinc-200">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-zinc-100 placeholder-zinc-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="vous@example.com"
               />
-              {errors.email && <p className="mt-2 text-sm text-red-400">{errors.email}</p>}
+              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
             </div>
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-zinc-200">Téléphone</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Téléphone</label>
               <input
                 id="phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-zinc-100 placeholder-zinc-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="06 12 34 56 78"
               />
-              {errors.phone && <p className="mt-2 text-sm text-red-400">{errors.phone}</p>}
+              {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone}</p>}
             </div>
             <div className="sm:col-span-2">
-              <label htmlFor="comments" className="block text-sm font-medium text-zinc-200">Commentaires</label>
+              <label htmlFor="comments" className="block text-sm font-medium text-gray-700">Commentaires</label>
               <textarea
                 id="comments"
                 rows={4}
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-2 text-zinc-100 placeholder-zinc-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="Allergies, préférences, nombre de personnes, etc."
               />
             </div>
@@ -203,7 +203,7 @@ export default function Home() {
               >
                 Confirmer ma réservation
               </button>
-              <p className="mt-2 text-sm text-zinc-400">La date et le créneau sélectionnés seront confirmés à l&apos;étape suivante.</p>
+              <p className="mt-2 text-sm text-gray-600">La date et le créneau sélectionnés seront confirmés à l&apos;étape suivante.</p>
             </div>
           </form>
         </div>
@@ -296,7 +296,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
                 onClick={() => onSelect(new Date(d))}
                 role="option"
                 aria-selected={active}
-                className={`snap-start shrink-0 min-w-[68px] px-2 py-2 rounded-xl border text-center flex flex-col gap-0.5 ${active ? 'bg-emerald-700 border-emerald-600 text-white' : 'bg-zinc-900 border-zinc-700 text-zinc-100'}`}
+                className={`snap-start shrink-0 min-w-[68px] px-2 py-2 rounded-xl border text-center flex flex-col gap-0.5 ${active ? 'bg-emerald-700 border-emerald-600 text-white' : 'bg-zinc-100 border-zinc-300 text-zinc-800 hover:bg-zinc-200'}`}
                 style={{ outlineColor: violet }}
               >
                 <div className="text-[11px] leading-4">{shortDay(d)}</div>
