@@ -30,7 +30,7 @@ export default function ThankYou({ searchParams }) {
             href="/"
             className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-base font-semibold border border-white/20 text-white hover:bg-white/5 transition"
           >
-            Retour à l'accueil
+            Retour à l&apos;accueil
           </Link>
         </div>
       </div>

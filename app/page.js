@@ -1,4 +1,5 @@
 "use client"
+export const SLOTS = ['12:00','13:00','18:00','19:00','20:00','21:00']
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -29,7 +30,6 @@ export default function Home() {
     return day === 0 || day === 6
   }
 
-  const SLOTS = ['12:00', '13:00', '18:00', '19:00', '20:00', '21:00']
   const availableSlots = useMemo(() => {
     if (!selectedDate) return []
     return SLOTS
@@ -112,7 +112,7 @@ export default function Home() {
               <span className="block text-sm font-medium text-gray-300">Créneaux disponibles</span>
               <div className="mt-2 min-h-[48px]">
                 {!selectedDate && (
-                  <p className="text-gray-400">Choisissez d'abord une date</p>
+                  <p className="text-gray-400">Choisissez d&apos;abord une date</p>
                 )}
                 {selectedDate && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -211,7 +211,7 @@ export default function Home() {
               >
                 Confirmer ma réservation
               </button>
-              <p className="mt-2 text-sm text-gray-400">La date et le créneau sélectionnés seront confirmés à l'étape suivante.</p>
+              <p className="mt-2 text-sm text-gray-400">La date et le créneau sélectionnés seront confirmés à l&apos;étape suivante.</p>
             </div>
           </form>
         </div>
