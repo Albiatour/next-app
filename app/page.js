@@ -85,9 +85,9 @@ export default function Home() {
         <section id="booking" ref={bookingRef} className="mb-8 scroll-mt-20">
           <h2 className="text-xl font-bold text-zinc-800 mb-4">Choisir une date et un créneau</h2>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="text-xs font-medium text-zinc-500 mb-1 block">Date</label>
+          <div className="grid gap-x-3 gap-y-4 md:grid-cols-2 md:gap-x-4 md:gap-y-5">
+            <div className="space-y-2 md:space-y-2.5">
+              <label className="block text-sm font-medium text-zinc-600 mb-1.5">Date</label>
               <DaysScroller
                 selected={selectedDate}
                 onSelect={(d) => { setSelectedDate(d); setSelectedSlot('') }}
@@ -95,8 +95,8 @@ export default function Home() {
               {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-zinc-500 mb-1 block">Créneaux disponibles</label>
+            <div className="space-y-2 md:space-y-2.5">
+              <label className="block text-sm font-medium text-zinc-600 mb-1.5">Créneaux disponibles</label>
               <div className="min-h-[48px]">
                 {!selectedDate && (
                   <p className="text-sm text-zinc-400">Choisissez d&apos;abord une date</p>
@@ -126,9 +126,9 @@ export default function Home() {
 
         {/* FORM */}
         <section className="mb-8">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-md space-y-4">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-md space-y-4 md:space-y-5">
             <h3 className="text-lg font-semibold text-zinc-800 mb-4">Vos informations</h3>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2 md:gap-x-4 md:gap-y-5">
               <InputField 
                 id="firstName" 
                 label="Prénom" 
