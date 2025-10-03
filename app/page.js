@@ -2,6 +2,7 @@
 export const SLOTS = ['12:00','13:00','18:00','19:00','20:00','21:00']
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { InputField, TextareaField } from '../components/InputField.jsx'
 
 export default function Home() {
   const router = useRouter()
@@ -125,101 +126,63 @@ export default function Home() {
 
         {/* FORM */}
         <section className="mb-8">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-md">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-md space-y-4">
             <h3 className="text-lg font-semibold text-zinc-800 mb-4">Vos informations</h3>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
-              <FormField
-                label="Prénom"
-                required
-                error={errors.firstName}
-              >
-                <input
-                  id="firstName"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
-                  placeholder="Alexandre"
-                />
-              </FormField>
-
-              <FormField
-                label="Nom"
-                required
-                error={errors.lastName}
-              >
-                <input
-                  id="lastName"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
-                  placeholder="Dupont"
-                />
-              </FormField>
-
-              <FormField
-                label="Email"
-                required
-                error={errors.email}
-              >
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
-                  placeholder="vous@example.com"
-                />
-              </FormField>
-
-              <FormField
-                label="Téléphone"
-                required
-                error={errors.phone}
-              >
-                <input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
-                  placeholder="06 12 34 56 78"
-                  required
-                />
-              </FormField>
-
-              <FormField
-                label="Nombre de couverts"
-                required
-                error={null}
-              >
-                <input
-                  id="covers"
-                  type="number"
-                  min="1"
-                  inputMode="numeric"
-                  value={covers}
-                  onChange={(e) => setCovers(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
-                  placeholder="Nombre de personnes"
-                  required
-                />
-              </FormField>
-
-              <FormField
-                label="Commentaires"
-                className="md:col-span-2"
-              >
-                <textarea
-                  id="comments"
-                  rows={4}
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-300 min-h-[96px]"
-                  placeholder="Allergies, préférences, nombre de personnes, etc."
-                />
-              </FormField>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <InputField 
+                id="firstName" 
+                label="Prénom" 
+                required 
+                autoComplete="given-name" 
+                value={firstName} 
+                onChange={(e) => setFirstName(e.target.value)} 
+                error={errors.firstName} 
+              />
+              <InputField 
+                id="lastName" 
+                label="Nom" 
+                required 
+                autoComplete="family-name" 
+                value={lastName} 
+                onChange={(e) => setLastName(e.target.value)} 
+                error={errors.lastName} 
+              />
+              <InputField 
+                id="email" 
+                label="Email" 
+                type="email" 
+                required 
+                autoComplete="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                error={errors.email} 
+              />
+              <InputField 
+                id="phone" 
+                label="Téléphone" 
+                type="tel" 
+                required 
+                autoComplete="tel" 
+                value={phone} 
+                onChange={(e) => setPhone(e.target.value)} 
+                error={errors.phone} 
+              />
+              <InputField 
+                id="covers" 
+                label="Nombre de couverts" 
+                type="number" 
+                required 
+                value={covers} 
+                onChange={(e) => setCovers(e.target.value)} 
+                error={errors.covers} 
+              />
+              <TextareaField 
+                id="comments" 
+                label="Commentaires" 
+                className="md:col-span-2" 
+                value={comments} 
+                onChange={(e) => setComments(e.target.value)} 
+              />
 
               <div className="md:col-span-2">
                 <button
@@ -237,20 +200,6 @@ export default function Home() {
         <div className="pb-[env(safe-area-inset-bottom)]" />
       </div>
     </main>
-  )
-}
-
-// FormField component
-function FormField({ label, required, error, children, className = "" }) {
-  return (
-    <div className={className}>
-      <label className="text-xs font-medium text-zinc-500 mb-1 block">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-    </div>
   )
 }
 
