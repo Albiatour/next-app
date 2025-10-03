@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 export default function Demo() {
   const slots = ["12h00", "13h00", "19h00", "20h00", "21h00"];
@@ -27,9 +28,9 @@ export default function Demo() {
       </div>
 
       <div style={{ marginTop: "30px" }}>
-        <a href="/" style={{ color: "lightblue" }}>
+        <Link href="/" style={{ color: "lightblue" }}>
           ← Retour à l’accueil
-        </a>
+        </Link>
       </div>
     </main>
   );
