@@ -1,7 +1,6 @@
 "use client"
 export const SLOTS = ['12:00','13:00','18:00','19:00','20:00','21:00']
 import { useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 export default function Home() {
@@ -62,30 +61,24 @@ export default function Home() {
     router.push(url)
   }
 
-  const violet = '#9b87f5'
+  const violet = '#166534'
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-900 text-white">
+    <main className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 text-gray-900">
       <style>{`html{scroll-behavior:smooth}.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
       {/* HERO */}
       <section className="min-h-screen flex items-center justify-center px-6">
         <div className="max-w-3xl text-center">
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight">Réservations IA pour restaurants</h1>
-          <p className="mt-4 text-lg text-gray-300">Prototype Next.js + Vercel — by Alexandre</p>
+          <p className="mt-4 text-lg text-gray-600">Prototype Next.js + Vercel — by Alexandre</p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <button
               onClick={handleScrollToBooking}
-              className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-base font-semibold shadow-lg transition focus:outline-none focus:ring-2"
+              className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-base font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2"
               style={{ backgroundColor: violet }}
             >
               Réserver
             </button>
-            <Link
-              href="/demo"
-              className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-base font-semibold border border-white/20 text-white hover:bg-white/5 transition"
-            >
-              Voir la démo
-            </Link>
           </div>
         </div>
       </section>
@@ -97,21 +90,21 @@ export default function Home() {
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <div>
-              <span className="block text-sm font-medium text-gray-300">Date</span>
+              <span className="block text-sm font-medium text-gray-800">Date</span>
               <div className="mt-2">
                 <DaysScroller
                   selected={selectedDate}
                   onSelect={(d) => { setSelectedDate(d); setSelectedSlot('') }}
                 />
               </div>
-              {errors.date && <p className="mt-2 text-sm text-red-400">{errors.date}</p>}
+              {errors.date && <p className="mt-2 text-sm text-red-600">{errors.date}</p>}
             </div>
 
             <div>
-              <span className="block text-sm font-medium text-gray-300">Créneaux disponibles</span>
+              <span className="block text-sm font-medium text-gray-800">Créneaux disponibles</span>
               <div className="mt-2 min-h-[48px]">
                 {!selectedDate && (
-                  <p className="text-gray-400">Choisissez d&apos;abord une date</p>
+                  <p className="text-gray-500">Choisissez d&apos;abord une date</p>
                 )}
                 {selectedDate && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -122,7 +115,7 @@ export default function Home() {
                           key={s}
                           type="button"
                           onClick={() => setSelectedSlot(s)}
-                          className={`rounded-full border px-4 py-2 text-sm font-medium transition ${isActive ? 'bg-violet-600 border-violet-500 text-white' : 'bg-transparent border-white/15 text-white hover:bg-white/5'}`}
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${isActive ? 'bg-emerald-700 border-emerald-600 text-white' : 'bg-transparent border-gray-300 text-gray-800 hover:bg-gray-100'}`}
                         >
                           {s}
                         </button>
@@ -130,7 +123,7 @@ export default function Home() {
                     })}
                   </div>
                 )}
-                {errors.slot && <p className="mt-2 text-sm text-red-400">{errors.slot}</p>}
+                {errors.slot && <p className="mt-2 text-sm text-red-600">{errors.slot}</p>}
               </div>
             </div>
           </div>
@@ -139,65 +132,65 @@ export default function Home() {
 
       {/* FORM */}
       <section className="px-6 pb-24">
-        <div className="mx-auto max-w-3xl rounded-2xl bg-white/5 border border-white/10 p-8 shadow-xl">
-          <h3 className="text-xl font-semibold">Vos informations</h3>
+        <div className="mx-auto max-w-3xl rounded-2xl bg-white border border-gray-200 p-8 shadow-xl">
+          <h3 className="text-xl font-semibold text-gray-900">Vos informations</h3>
           <form onSubmit={handleSubmit} className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">Prénom</label>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Prénom</label>
               <input
                 id="firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="Alexandre"
               />
-              {errors.firstName && <p className="mt-2 text-sm text-red-400">{errors.firstName}</p>}
+              {errors.firstName && <p className="mt-2 text-sm text-red-600">{errors.firstName}</p>}
             </div>
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-300">Nom</label>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Nom</label>
               <input
                 id="lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="Dupont"
               />
-              {errors.lastName && <p className="mt-2 text-sm text-red-400">{errors.lastName}</p>}
+              {errors.lastName && <p className="mt-2 text-sm text-red-600">{errors.lastName}</p>}
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="vous@example.com"
               />
-              {errors.email && <p className="mt-2 text-sm text-red-400">{errors.email}</p>}
+              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
             </div>
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-300">Téléphone</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Téléphone</label>
               <input
                 id="phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600"
                 placeholder="06 12 34 56 78"
               />
-              {errors.phone && <p className="mt-2 text-sm text-red-400">{errors.phone}</p>}
+              {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone}</p>}
             </div>
             <div className="sm:col-span-2">
-              <label htmlFor="comments" className="block text-sm font-medium text-gray-300">Commentaires</label>
+              <label htmlFor="comments" className="block text-sm font-medium text-gray-700">Commentaires</label>
               <textarea
                 id="comments"
                 rows={4}
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-white placeholder-white/40 outline-none focus:ring-2"
+                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500"
                 placeholder="Allergies, préférences, nombre de personnes, etc."
               />
             </div>
@@ -205,12 +198,12 @@ export default function Home() {
             <div className="sm:col-span-2">
               <button
                 type="submit"
-                className="w-full rounded-xl px-6 py-3 text-base font-semibold shadow-lg transition focus:outline-none focus:ring-2"
+                className="w-full rounded-xl px-6 py-3 text-base font-semibold text-white shadow-lg transition focus:outline-none focus:ring-2"
                 style={{ backgroundColor: violet }}
               >
                 Confirmer ma réservation
               </button>
-              <p className="mt-2 text-sm text-gray-400">La date et le créneau sélectionnés seront confirmés à l&apos;étape suivante.</p>
+              <p className="mt-2 text-sm text-gray-600">La date et le créneau sélectionnés seront confirmés à l&apos;étape suivante.</p>
             </div>
           </form>
         </div>
@@ -224,7 +217,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
   const containerRef = useRef(null)
   const [canLeft, setCanLeft] = useState(false)
   const [canRight, setCanRight] = useState(true)
-  const violet = '#9b87f5'
+  const violet = '#166534'
 
   const days = useMemo(() => {
     const arr = []
@@ -282,7 +275,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
         aria-label="Précédent"
         onClick={() => scrollByPage(-1)}
         disabled={!canLeft}
-        className={`rounded-full border px-3 py-2 text-white ${canLeft ? 'border-white/20 bg-white/5 hover:bg-white/10' : 'border-white/10 bg-white/5 opacity-40 cursor-not-allowed'}`}
+        className={`rounded-full border px-3 py-2 ${canLeft ? 'text-gray-700 border-gray-300 bg-white hover:bg-gray-100' : 'text-gray-400 border-gray-200 bg-white opacity-60 cursor-not-allowed'}`}
       >
         ←
       </button>
@@ -298,7 +291,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
               key={d.toISOString()}
               type="button"
               onClick={() => onSelect(new Date(d))}
-              className={`snap-start shrink-0 rounded-xl border px-4 py-2 text-center min-w-[72px] ${active ? 'bg-violet-600 border-violet-500 text-white' : 'bg-zinc-900 border-zinc-700 text-zinc-200 hover:bg-zinc-800'}`}
+              className={`snap-start shrink-0 rounded-xl border px-4 py-2 text-center min-w-[72px] ${active ? 'bg-emerald-700 border-emerald-600 text-white' : 'bg-zinc-100 border-zinc-300 text-zinc-800 hover:bg-zinc-200'}`}
               style={{ outlineColor: violet }}
             >
               <div className="text-[11px] leading-4">{shortDay(d)}</div>
@@ -313,7 +306,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
         aria-label="Suivant"
         onClick={() => scrollByPage(1)}
         disabled={!canRight}
-        className={`rounded-full border px-3 py-2 text-white ${canRight ? 'border-white/20 bg-white/5 hover:bg-white/10' : 'border-white/10 bg-white/5 opacity-40 cursor-not-allowed'}`}
+        className={`rounded-full border px-3 py-2 ${canRight ? 'text-gray-700 border-gray-300 bg-white hover:bg-gray-100' : 'text-gray-400 border-gray-200 bg-white opacity-60 cursor-not-allowed'}`}
       >
         →
       </button>
