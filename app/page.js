@@ -14,6 +14,7 @@ export default function Home() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [covers, setCovers] = useState('')
   const [comments, setComments] = useState('')
   const [errors, setErrors] = useState({})
 
@@ -181,6 +182,22 @@ export default function Home() {
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
                   placeholder="06 12 34 56 78"
+                />
+              </FormField>
+
+              <FormField
+                label="Nombre de couverts"
+                error={null}
+              >
+                <input
+                  id="covers"
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  value={covers}
+                  onChange={(e) => setCovers(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
+                  placeholder="Nombre de personnes"
                 />
               </FormField>
 
