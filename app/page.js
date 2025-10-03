@@ -47,6 +47,8 @@ export default function Home() {
     if (!lastName || lastName.trim().length < 2) nextErrors.lastName = 'Nom trop court'
     if (!emailPattern.test(email)) nextErrors.email = 'Email invalide'
     if (!phone || phone.trim().length < 8) nextErrors.phone = 'Téléphone invalide'
+    const coversNum = parseInt(String(covers || '').trim(), 10)
+    if (!coversNum || coversNum < 1) nextErrors.covers = 'Nombre de couverts requis'
     if (!selectedDate) nextErrors.date = 'Date requise'
     if (!selectedSlot) nextErrors.slot = 'Créneau requis'
     setErrors(nextErrors)
@@ -173,6 +175,7 @@ export default function Home() {
 
               <FormField
                 label="Téléphone"
+                required
                 error={errors.phone}
               >
                 <input
@@ -182,11 +185,13 @@ export default function Home() {
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
                   placeholder="06 12 34 56 78"
+                  required
                 />
               </FormField>
 
               <FormField
                 label="Nombre de couverts"
+                required
                 error={null}
               >
                 <input
@@ -198,6 +203,7 @@ export default function Home() {
                   onChange={(e) => setCovers(e.target.value)}
                   className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-zinc-900 placeholder-zinc-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-300"
                   placeholder="Nombre de personnes"
+                  required
                 />
               </FormField>
 
