@@ -128,7 +128,7 @@ export default function Home() {
         <section className="mb-8">
           <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-md space-y-4 md:space-y-5">
             <h3 className="text-lg font-semibold text-zinc-800 mb-4">Vos informations</h3>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-3 gap-y-4 md:grid-cols-2 md:gap-x-4 md:gap-y-5">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-3 gap-y-2 md:grid-cols-2 md:gap-x-4 md:gap-y-3">
               <InputField 
                 id="firstName" 
                 label="Prénom" 
