@@ -1,164 +1,29 @@
 "use client"
+export const SLOTS = ['12:00','13:00','18:00','19:00','20:00','21:00']
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { InputField, TextareaField } from '../components/InputField.jsx'
-
-// ========== HELPERS : Conversion de dates ==========
-// Convertit un objet Date en format européen DD/MM/YYYY
-function toEU(date) {
-  if (!date) return ''
-  const d = new Date(date)
-  const day = String(d.getDate()).padStart(2, '0')
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const year = d.getFullYear()
-  return `${day}/${month}/${year}`
-}
-
-// Convertit une date européenne DD/MM/YYYY vers format input YYYY-MM-DD
-function fromEUtoInputValue(euDate) {
-  if (!euDate || !euDate.includes('/')) return ''
-  const [day, month, year] = euDate.split('/')
-  return `${year}-${month}-${day}`
-}
-
-// Convertit une valeur d'input YYYY-MM-DD vers format européen DD/MM/YYYY
-function fromInputValueToEU(inputVal) {
-  if (!inputVal || !inputVal.includes('-')) return ''
-  const [year, month, day] = inputVal.split('-')
-  return `${day}/${month}/${year}`
-}
-
-// Génère une clé d'idempotence unique
-function genIdemKey() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  // Fallback pour navigateurs anciens
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
-}
 
 export default function Home() {
   const router = useRouter()
   const bookingRef = useRef(null)
 
-  // ========== STATES : Formulaire et réservation ==========
-  // Note: selectedDate stocke maintenant un objet Date (pas une string EU)
+  // Form and booking state
   const [selectedDate, setSelectedDate] = useState(null)
   const [selectedSlot, setSelectedSlot] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [covers, setCovers] = useState('2') // Défaut: 2 couverts
+  const [covers, setCovers] = useState('')
   const [comments, setComments] = useState('')
   const [errors, setErrors] = useState({})
 
-  // ========== STATES : Intégration API ==========
-  const [slots, setSlots] = useState([]) // Liste des créneaux depuis /api/availability
-  const [loading, setLoading] = useState(false) // Chargement des créneaux
-  const [bookingLoading, setBookingLoading] = useState(false) // Réservation en cours
-  const [message, setMessage] = useState(null) // {type:'success'|'error', text:string}
-
-  // ========== FONCTION : Charger les créneaux depuis l'API ==========
-  const loadAvailability = async () => {
-    if (!selectedDate) {
-      setSlots([])
-      return
-    }
-    
-    setLoading(true)
-    setMessage(null) // Effacer les anciens messages
-    
-    try {
-      const dateEU = toEU(selectedDate) // Convertir en DD/MM/YYYY
-      const partySize = parseInt(covers || '2', 10)
-      const params = new URLSearchParams({
-        restaurant: 'sarrasin',
-        date: dateEU,
-        partySize: String(partySize)
-      })
-      
-      const res = await fetch(`/api/availability?${params}`)
-      const data = await res.json()
-      
-      if (!res.ok) {
-        throw new Error(data.error || 'Erreur de chargement')
-      }
-      
-      setSlots(data.slots || [])
-    } catch (err) {
-      console.error('Erreur loadAvailability:', err)
-      setMessage({ type: 'error', text: 'Erreur de chargement des créneaux' })
-      setSlots([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ========== FONCTION : Réserver un créneau via l'API ==========
-  const reserve = async (time) => {
-    if (!selectedDate || bookingLoading) return
-    
-    setBookingLoading(true)
-    setMessage(null)
-    
-    try {
-      const dateEU = toEU(selectedDate)
-      const partySize = parseInt(covers || '2', 10)
-      const name = `${firstName.trim()} ${lastName.trim()}`.trim() || 'Client'
-      const emailVal = email || 'no-email@example.com'
-      const phoneVal = phone || ''
-      
-      const body = {
-        restaurant: 'sarrasin',
-        date: dateEU,
-        time,
-        partySize,
-        name,
-        email: emailVal,
-        phone: phoneVal,
-        idempotencyKey: genIdemKey()
-      }
-      
-      const res = await fetch('/api/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
-      
-      const data = await res.json()
-      
-      if (!res.ok) {
-        // Gérer le cas "SLOT_FULL"
-        if (data.code === 'SLOT_FULL') {
-          setMessage({ type: 'error', text: 'Ce créneau est complet' })
-          await loadAvailability() // Recharger pour voir les nouvelles dispo
-          return
-        }
-        throw new Error(data.error || 'Erreur de réservation')
-      }
-      
-      // Succès
-      setMessage({ 
-        type: 'success', 
-        text: `Réservation confirmée • ID: ${data.id || data.bookingId || 'N/A'}` 
-      })
-      setSelectedSlot(time) // Marquer le créneau sélectionné
-      await loadAvailability() // Recharger pour voir les nouvelles dispo
-      
-    } catch (err) {
-      console.error('Erreur reserve:', err)
-      setMessage({ type: 'error', text: err.message || 'Erreur de réservation' })
-    } finally {
-      setBookingLoading(false)
-    }
-  }
-
-  // ========== USEEFFECT : Charger les créneaux au démarrage et aux changements ==========
+  // Smooth scrolling + hide scrollbar utilities
+  // Injected once per mount
   useEffect(() => {
-    loadAvailability()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, covers]) // Recharger si date ou nombre de couverts changent
+    // no-op; style tag is rendered in JSX below
+  }, [])
 
   const isWeekend = (d) => {
     if (!d) return false
@@ -166,11 +31,10 @@ export default function Home() {
     return day === 0 || day === 6
   }
 
-  // ========== MEMO : Liste des créneaux disponibles (désormais depuis l'API) ==========
   const availableSlots = useMemo(() => {
     if (!selectedDate) return []
-    return slots // Utiliser les créneaux de l'API au lieu de SLOTS statiques
-  }, [selectedDate, slots])
+    return SLOTS
+  }, [selectedDate])
 
   const handleScrollToBooking = () => {
     const el = bookingRef.current
@@ -244,46 +108,18 @@ export default function Home() {
                 {!selectedDate && (
                   <p className="text-sm text-zinc-400">Choisissez d&apos;abord une date</p>
                 )}
-                {/* ========== UI : Affichage des créneaux depuis l'API ========== */}
-                {selectedDate && loading && (
-                  <p className="text-sm text-zinc-400">Chargement des créneaux...</p>
-                )}
-                {selectedDate && !loading && availableSlots.length === 0 && (
-                  <p className="text-sm text-zinc-400">Aucun créneau disponible</p>
-                )}
-                {selectedDate && !loading && availableSlots.length > 0 && (
+                {selectedDate && (
                   <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
                     {availableSlots.map((s) => {
-                      // s.time = créneau (ex: "12:00")
-                      // s.isBookable = true/false
-                      // s.capacityLeft = nombre de places restantes
-                      const isActive = selectedSlot === s.time
-                      const isDisabled = !s.isBookable || bookingLoading
-                      const tooltipText = s.isBookable 
-                        ? `${s.capacityLeft || 0} place${(s.capacityLeft || 0) > 1 ? 's' : ''} restante${(s.capacityLeft || 0) > 1 ? 's' : ''}`
-                        : 'Complet'
-                      
+                      const isActive = selectedSlot === s
                       return (
                         <button
-                          key={s.time}
+                          key={s}
                           type="button"
-                          onClick={() => s.isBookable && !bookingLoading ? reserve(s.time) : null}
-                          disabled={isDisabled}
-                          title={tooltipText}
-                          className={`w-full rounded-full border px-3 py-2 text-sm shadow-sm transition ${
-                            isActive 
-                              ? 'bg-white border-emerald-500 ring-2 ring-emerald-300 text-zinc-800' 
-                              : isDisabled
-                                ? 'border-zinc-200 bg-zinc-100 text-zinc-400 cursor-not-allowed'
-                                : 'border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300'
-                          }`}
+                          onClick={() => setSelectedSlot(s)}
+                          className={`w-full rounded-full border px-3 py-2 text-sm text-zinc-800 shadow-sm hover:border-zinc-300 transition ${isActive ? 'bg-white border-emerald-500 ring-2 ring-emerald-300' : 'border-zinc-200 bg-white'}`}
                         >
-                          <div className="flex flex-col items-center">
-                            <span>{s.time}</span>
-                            {!s.isBookable && (
-                              <span className="text-[10px] text-red-500">• complet</span>
-                            )}
-                          </div>
+                          {s}
                         </button>
                       )
                     })}
@@ -372,19 +208,6 @@ export default function Home() {
             </form>
           </div>
         </section>
-
-        {/* ========== ZONE DE MESSAGES : Succès / Erreur ========== */}
-        {message && (
-          <section className="mb-8">
-            <div className={`rounded-xl border px-4 py-3 shadow-sm ${
-              message.type === 'success' 
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                : 'bg-red-50 border-red-200 text-red-800'
-            }`}>
-              <p className="text-sm font-medium">{message.text}</p>
-            </div>
-          </section>
-        )}
 
         <div className="pb-[env(safe-area-inset-bottom)]" />
       </div>
