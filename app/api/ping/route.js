@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'; // empêche le cache sur Vercel
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   return Response.json({
