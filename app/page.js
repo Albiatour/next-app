@@ -37,6 +37,33 @@ function genIdemKey() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
 }
 
+// Convertit une date européenne DD/MM/YYYY en objet Date (UTC pour éviter problèmes de fuseau)
+function euToDate(euDate) {
+  if (!euDate || !euDate.includes('/')) return null
+  const [day, month, year] = euDate.split('/')
+  return new Date(`${year}-${month}-${day}T12:00:00Z`)
+}
+
+// Formate un horaire HH:mm en format français (ex: "13:00" -> "13h", "13:30" -> "13h30")
+function formatTimeLabel(time) {
+  if (!time) return ''
+  const [hours, minutes] = time.split(':')
+  if (minutes === '00') return `${parseInt(hours, 10)}h`
+  return `${parseInt(hours, 10)}h${minutes}`
+}
+
+// Formate une date au format long français (ex: "08 octobre 2025")
+function formatLongFrenchDate(date) {
+  if (!date) return ''
+  const d = new Date(date)
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC'
+  }).format(d)
+}
+
 export default function Home() {
   const router = useRouter()
   const bookingRef = useRef(null)
@@ -338,7 +365,7 @@ export default function Home() {
             {selectedTime && (
               <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2.5">
                 <p className="text-sm text-emerald-800">
-                  <span className="font-semibold">Créneau choisi :</span> {selectedTime} le {selectedDate ? toEU(selectedDate) : ''}.
+                  Créneau choisi : <strong>{formatTimeLabel(selectedTime)}</strong> le {formatLongFrenchDate(selectedDate)}.
                 </p>
               </div>
             )}
