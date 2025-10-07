@@ -44,7 +44,8 @@ export default function Home() {
   // ========== STATES : Formulaire et réservation ==========
   // Note: selectedDate stocke maintenant un objet Date (pas une string EU)
   const [selectedDate, setSelectedDate] = useState(null)
-  const [selectedSlot, setSelectedSlot] = useState('')
+  const [selectedTime, setSelectedTime] = useState('') // ÉTAPE 1 : Créneau sélectionné
+  const [selectedSlot, setSelectedSlot] = useState('') // Conservé pour compatibilité
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -57,6 +58,7 @@ export default function Home() {
   const [slots, setSlots] = useState([]) // Liste des créneaux depuis /api/availability
   const [loading, setLoading] = useState(false) // Chargement des créneaux
   const [bookingLoading, setBookingLoading] = useState(false) // Réservation en cours
+  const [confirming, setConfirming] = useState(false) // ÉTAPE 2 : Confirmation en cours
   const [message, setMessage] = useState(null) // {type:'success'|'error', text:string}
 
   // ========== FONCTION : Charger les créneaux depuis l'API ==========
@@ -95,11 +97,11 @@ export default function Home() {
     }
   }
 
-  // ========== FONCTION : Réserver un créneau via l'API ==========
+  // ========== FONCTION : Réserver un créneau via l'API (ÉTAPE 2) ==========
   const reserve = async (time) => {
-    if (!selectedDate || bookingLoading) return
+    if (!selectedDate || confirming) return
     
-    setBookingLoading(true)
+    setConfirming(true)
     setMessage(null)
     
     try {
@@ -144,14 +146,46 @@ export default function Home() {
         text: `Réservation confirmée • ID: ${data.id || data.bookingId || 'N/A'}` 
       })
       setSelectedSlot(time) // Marquer le créneau sélectionné
+      setSelectedTime(time) // Marquer le créneau sélectionné
       await loadAvailability() // Recharger pour voir les nouvelles dispo
       
     } catch (err) {
       console.error('Erreur reserve:', err)
       setMessage({ type: 'error', text: err.message || 'Erreur de réservation' })
     } finally {
-      setBookingLoading(false)
+      setConfirming(false)
     }
+  }
+
+  // ========== FONCTION : Confirmer la réservation (ÉTAPE 2 : Validation + Appel API) ==========
+  const handleConfirmReservation = async () => {
+    setErrors({})
+    
+    // Validation : Créneau sélectionné
+    if (!selectedTime) {
+      setMessage({ type: 'error', text: 'Veuillez d\'abord choisir un créneau' })
+      return
+    }
+    
+    // Validation : Formulaire
+    const nextErrors = {}
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    
+    if (!firstName || firstName.trim().length < 2) nextErrors.firstName = 'Prénom requis'
+    if (!lastName || lastName.trim().length < 2) nextErrors.lastName = 'Nom requis'
+    if (!emailPattern.test(email)) nextErrors.email = 'Email invalide'
+    if (!phone || phone.trim().length < 8) nextErrors.phone = 'Téléphone invalide'
+    const coversNum = parseInt(String(covers || '').trim(), 10)
+    if (!coversNum || coversNum < 1) nextErrors.covers = 'Nombre de couverts requis'
+    
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors)
+      setMessage({ type: 'error', text: 'Veuillez compléter tous les champs requis' })
+      return
+    }
+    
+    // Tout est OK : réserver
+    await reserve(selectedTime)
   }
 
   // ========== USEEFFECT : Charger les créneaux au démarrage et aux changements ==========
@@ -197,15 +231,14 @@ export default function Home() {
     // Ne garder que les chiffres
     const numericValue = value.replace(/[^0-9]/g, '')
     setCovers(numericValue)
+    setSelectedTime('') // Réinitialiser le créneau car la capacité change
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!validate()) return
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
-    const dateStr = selectedDate ? isoDate(selectedDate) : ''
-    const url = `/thank-you?name=${encodeURIComponent(fullName)}&date=${encodeURIComponent(dateStr)}&slot=${encodeURIComponent(selectedSlot)}`
-    router.push(url)
+  // ========== HANDLER : Changement de date (réinitialiser le créneau sélectionné) ==========
+  const handleDateChange = (date) => {
+    setSelectedDate(date)
+    setSelectedTime('') // Réinitialiser le créneau sélectionné
+    setSelectedSlot('')
   }
 
   return (
@@ -233,7 +266,7 @@ export default function Home() {
               <label className="block text-sm font-medium text-zinc-600 mb-1.5">Date</label>
               <DaysScroller
                 selected={selectedDate}
-                onSelect={(d) => { setSelectedDate(d); setSelectedSlot('') }}
+                onSelect={handleDateChange}
               />
               {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
             </div>
@@ -254,11 +287,12 @@ export default function Home() {
                 {selectedDate && !loading && availableSlots.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
                     {availableSlots.map((s) => {
+                      // ========== ÉTAPE 1 : Sélection du créneau (pas de réservation immédiate) ==========
                       // s.time = créneau (ex: "12:00")
                       // s.isBookable = true/false
                       // s.capacityLeft = nombre de places restantes
-                      const isActive = selectedSlot === s.time
-                      const isDisabled = !s.isBookable || bookingLoading
+                      const isSelected = selectedTime === s.time
+                      const isDisabled = !s.isBookable
                       const tooltipText = s.isBookable 
                         ? `${s.capacityLeft || 0} place${(s.capacityLeft || 0) > 1 ? 's' : ''} restante${(s.capacityLeft || 0) > 1 ? 's' : ''}`
                         : 'Complet'
@@ -267,12 +301,12 @@ export default function Home() {
                         <button
                           key={s.time}
                           type="button"
-                          onClick={() => s.isBookable && !bookingLoading ? reserve(s.time) : null}
+                          onClick={() => s.isBookable ? setSelectedTime(s.time) : null}
                           disabled={isDisabled}
                           title={tooltipText}
                           className={`w-full rounded-full border px-3 py-2 text-sm shadow-sm transition ${
-                            isActive 
-                              ? 'bg-white border-emerald-500 ring-2 ring-emerald-300 text-zinc-800' 
+                            isSelected 
+                              ? 'bg-white border-emerald-500 ring-2 ring-emerald-500 text-zinc-800' 
                               : isDisabled
                                 ? 'border-zinc-200 bg-zinc-100 text-zinc-400 cursor-not-allowed'
                                 : 'border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300'
@@ -299,7 +333,16 @@ export default function Home() {
         <section className="mb-8">
           <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6 shadow-md space-y-4 md:space-y-5">
             <h3 className="text-lg font-semibold text-zinc-800 mb-4">Vos informations</h3>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-3 gap-y-2 md:grid-cols-2 md:gap-x-4 md:gap-y-3">
+            
+            {/* ========== MESSAGE D'AIDE : Créneau sélectionné ========== */}
+            {selectedTime && (
+              <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2.5">
+                <p className="text-sm text-emerald-800">
+                  <span className="font-semibold">Créneau choisi :</span> {selectedTime} le {selectedDate ? toEU(selectedDate) : ''} pour {covers || '2'} personne{(covers && parseInt(covers) > 1) ? 's' : ''}
+                </p>
+              </div>
+            )}
+            <div className="grid grid-cols-1 gap-x-3 gap-y-2 md:grid-cols-2 md:gap-x-4 md:gap-y-3">
               <InputField 
                 id="firstName" 
                 label="Prénom" 
@@ -360,16 +403,23 @@ export default function Home() {
                 onChange={(e) => setComments(e.target.value)} 
               />
 
+              {/* ========== BOUTON CONFIRMATION (ÉTAPE 2) ========== */}
               <div className="md:col-span-2">
                 <button
-                  type="submit"
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  type="button"
+                  onClick={handleConfirmReservation}
+                  disabled={confirming}
+                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirmer ma réservation
+                  {confirming ? 'Confirmation en cours...' : 'Confirmer ma réservation'}
                 </button>
-                <p className="mt-2 text-xs text-zinc-500">La date et le créneau sélectionnés seront confirmés à l&apos;étape suivante.</p>
+                <p className="mt-2 text-xs text-zinc-500">
+                  {selectedTime 
+                    ? `Vous allez réserver le créneau de ${selectedTime}.` 
+                    : 'Veuillez d\'abord choisir une date et un créneau ci-dessus.'}
+                </p>
               </div>
-            </form>
+            </div>
           </div>
         </section>
 
