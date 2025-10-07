@@ -50,7 +50,7 @@ export default function Home() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [covers, setCovers] = useState('2') // Défaut: 2 couverts
+  const [covers, setCovers] = useState('1') // Défaut: 1 couvert
   const [comments, setComments] = useState('')
   const [errors, setErrors] = useState({})
 
@@ -73,7 +73,7 @@ export default function Home() {
     
     try {
       const dateEU = toEU(selectedDate) // Convertir en DD/MM/YYYY
-      const partySize = parseInt(covers || '2', 10)
+      const partySize = parseInt(covers || '1', 10)
       const params = new URLSearchParams({
         restaurant: 'sarrasin',
         date: dateEU,
@@ -106,7 +106,7 @@ export default function Home() {
     
     try {
       const dateEU = toEU(selectedDate)
-      const partySize = parseInt(covers || '2', 10)
+      const partySize = parseInt(covers || '1', 10)
       const name = `${firstName.trim()} ${lastName.trim()}`.trim() || 'Client'
       const emailVal = email || 'no-email@example.com'
       const phoneVal = phone || ''
@@ -338,7 +338,7 @@ export default function Home() {
             {selectedTime && (
               <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2.5">
                 <p className="text-sm text-emerald-800">
-                  <span className="font-semibold">Créneau choisi :</span> {selectedTime} le {selectedDate ? toEU(selectedDate) : ''} pour {covers || '2'} personne{(covers && parseInt(covers) > 1) ? 's' : ''}
+                  <span className="font-semibold">Créneau choisi :</span> {selectedTime} le {selectedDate ? toEU(selectedDate) : ''}.
                 </p>
               </div>
             )}
