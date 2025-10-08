@@ -87,6 +87,7 @@ export default function Home() {
   const [bookingLoading, setBookingLoading] = useState(false) // Réservation en cours
   const [confirming, setConfirming] = useState(false) // ÉTAPE 2 : Confirmation en cours
   const [message, setMessage] = useState(null) // {type:'success'|'error', text:string}
+  const [confirmation, setConfirmation] = useState(null) // Écran de confirmation après booking réussi
 
   // ========== FONCTION : Charger les créneaux depuis l'API ==========
   const loadAvailability = async () => {
@@ -134,7 +135,7 @@ export default function Home() {
     try {
       const dateEU = toEU(selectedDate)
       const partySize = parseInt(covers || '1', 10)
-      const name = `${firstName.trim()} ${lastName.trim()}`.trim() || 'Client'
+      const customerName = `${firstName.trim()} ${lastName.trim()}`.trim() || 'Client'
       const emailVal = email || 'no-email@example.com'
       const phoneVal = phone || ''
       
@@ -143,7 +144,7 @@ export default function Home() {
         date: dateEU,
         time,
         partySize,
-        name,
+        name: customerName,
         email: emailVal,
         phone: phoneVal,
         idempotencyKey: genIdemKey()
@@ -167,11 +168,18 @@ export default function Home() {
         throw new Error(data.error || 'Erreur de réservation')
       }
       
-      // Succès
-      setMessage({ 
-        type: 'success', 
-        text: `Réservation confirmée • ID: ${data.id || data.bookingId || 'N/A'}` 
+      // Succès : Afficher l'écran de confirmation
+      const bookingId = data.id || data.bookingId || 'N/A'
+      const confirmationName = `${firstName.trim()} ${lastName.trim()}`.trim() || 'Client'
+      
+      setConfirmation({
+        bookingId,
+        dateEU: toEU(selectedDate),
+        time,
+        partySize,
+        name: confirmationName
       })
+      
       setSelectedSlot(time) // Marquer le créneau sélectionné
       setSelectedTime(time) // Marquer le créneau sélectionné
       await loadAvailability() // Recharger pour voir les nouvelles dispo
@@ -268,6 +276,21 @@ export default function Home() {
     setSelectedSlot('')
   }
 
+  // ========== HANDLER : Nouvelle réservation (réinitialiser l'écran de confirmation) ==========
+  const handleNewReservation = () => {
+    setConfirmation(null)
+    setMessage(null)
+    setSelectedTime('')
+    setSelectedSlot('')
+    setFirstName('')
+    setLastName('')
+    setEmail('')
+    setPhone('')
+    setComments('')
+    setErrors({})
+    loadAvailability()
+  }
+
   return (
     <main className="min-h-[100svh] w-full bg-zinc-50">
       <style>{`html{scroll-behavior:smooth}.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
@@ -284,6 +307,50 @@ export default function Home() {
           </button>
         </section>
 
+        {/* ========== ÉCRAN DE CONFIRMATION (affiché après booking réussi) ========== */}
+        {confirmation && (
+          <section className="mb-8">
+            <div className="rounded-2xl border border-emerald-300 bg-white p-6 md:p-8 shadow-lg">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
+                  <span className="text-3xl">✅</span>
+                </div>
+                <h2 className="text-2xl font-bold text-zinc-800 mb-2">Réservation confirmée !</h2>
+                <p className="text-sm text-zinc-500">Votre table est réservée</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="rounded-lg bg-zinc-50 px-4 py-3">
+                  <p className="text-xs text-zinc-500 mb-1">Référence de réservation</p>
+                  <p className="text-lg font-semibold text-zinc-800">#{confirmation.bookingId}</p>
+                </div>
+                
+                <div className="rounded-lg bg-zinc-50 px-4 py-3">
+                  <p className="text-xs text-zinc-500 mb-1">Date et heure</p>
+                  <p className="text-lg font-semibold text-zinc-800">
+                    {formatTimeLabel(confirmation.time)} le {formatLongFrenchDate(euToDate(confirmation.dateEU))}
+                  </p>
+                </div>
+
+                <div className="rounded-lg bg-zinc-50 px-4 py-3">
+                  <p className="text-xs text-zinc-500 mb-1">Nom</p>
+                  <p className="text-lg font-semibold text-zinc-800">{confirmation.name}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleNewReservation}
+                className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              >
+                Nouvelle réservation
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* ========== UI NORMALE (masquée si confirmation existe) ========== */}
+        {!confirmation && (
+          <>
         {/* BOOKING */}
         <section id="booking" ref={bookingRef} className="mb-8 scroll-mt-20">
           <h2 className="text-xl font-bold text-zinc-800 mb-4">Choisir une date et un créneau</h2>
@@ -461,6 +528,8 @@ export default function Home() {
               <p className="text-sm font-medium">{message.text}</p>
             </div>
           </section>
+        )}
+        </>
         )}
 
         <div className="pb-[env(safe-area-inset-bottom)]" />
