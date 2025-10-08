@@ -317,14 +317,12 @@ export default function Home() {
                 </div>
                 <h2 className="text-2xl font-bold text-zinc-800 mb-2">Réservation confirmée !</h2>
                 <p className="text-sm text-zinc-500">Votre table est réservée</p>
+                <p className="text-sm text-gray-600 mt-3">
+                  Votre réservation a bien été enregistrée. Vous recevrez une confirmation par email.
+                </p>
               </div>
 
               <div className="space-y-3 mb-6">
-                <div className="rounded-lg bg-zinc-50 px-4 py-3">
-                  <p className="text-xs text-zinc-500 mb-1">Référence de réservation</p>
-                  <p className="text-lg font-semibold text-zinc-800">#{confirmation.bookingId}</p>
-                </div>
-                
                 <div className="rounded-lg bg-zinc-50 px-4 py-3">
                   <p className="text-xs text-zinc-500 mb-1">Date et heure</p>
                   <p className="text-lg font-semibold text-zinc-800">
