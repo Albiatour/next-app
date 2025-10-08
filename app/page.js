@@ -177,7 +177,8 @@ export default function Home() {
         dateEU: toEU(selectedDate),
         time,
         partySize,
-        name: confirmationName
+        name: confirmationName,
+        comments: comments.trim() // Inclure les commentaires s'ils existent
       })
       
       setSelectedSlot(time) // Marquer le créneau sélectionné
@@ -322,6 +323,14 @@ export default function Home() {
                   <p className="text-xs text-zinc-500 mb-1">Nom</p>
                   <p className="text-lg font-semibold text-zinc-800">{confirmation.name}</p>
                 </div>
+
+                {/* Afficher les commentaires seulement s'ils existent */}
+                {confirmation.comments && (
+                  <div className="rounded-lg bg-zinc-50 px-4 py-3">
+                    <p className="text-xs text-zinc-500 mb-1">Commentaire</p>
+                    <p className="text-sm text-zinc-800">{confirmation.comments}</p>
+                  </div>
+                )}
               </div>
 
               <button
