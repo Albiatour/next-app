@@ -295,18 +295,6 @@ export default function Home() {
     <main className="min-h-[100svh] w-full bg-zinc-50">
       <style>{`html{scroll-behavior:smooth}.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
       <div className="mx-auto w-full max-w-screen-sm px-4 py-6 md:max-w-screen-md lg:max-w-screen-lg">
-        {/* HERO */}
-        <section className="text-center mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-zinc-800 mb-2">Réservations IA pour restaurants</h1>
-          <p className="text-sm text-zinc-500 mb-6">Prototype Next.js + Vercel — by Alexandre</p>
-          <button
-            onClick={handleScrollToBooking}
-            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          >
-            Réserver
-          </button>
-        </section>
-
         {/* ========== ÉCRAN DE CONFIRMATION (affiché après booking réussi) ========== */}
         {confirmation && (
           <section className="mb-8">
@@ -349,6 +337,18 @@ export default function Home() {
         {/* ========== UI NORMALE (masquée si confirmation existe) ========== */}
         {!confirmation && (
           <>
+        {/* HERO */}
+        <section className="text-center mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-zinc-800 mb-2">Réservations IA pour restaurants</h1>
+          <p className="text-sm text-zinc-500 mb-6">Prototype Next.js + Vercel — by Alexandre</p>
+          <button
+            onClick={handleScrollToBooking}
+            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+          >
+            Réserver
+          </button>
+        </section>
+
         {/* BOOKING */}
         <section id="booking" ref={bookingRef} className="mb-8 scroll-mt-20">
           <h2 className="text-xl font-bold text-zinc-800 mb-4">Choisir une date et un créneau</h2>
