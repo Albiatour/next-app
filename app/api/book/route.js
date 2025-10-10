@@ -152,14 +152,15 @@ export async function POST(req) {
     try {
       created = await airtableCreate(T_BOOKS, {
         booking_id: bookingId,
-        restaurant_slug: restaurant,
+        restaurant_slug_raw: restaurant,
         slot_id: slot_id_value,
-        date_iso: dateISO,
-        time_24h: time,
+        date_iso_raw: dateISO,
+        time_24h_raw: time,
         party_size: partySize,
         name, email, phone,
         status: 'confirmed',
         idempotency_key: idemKey
+        // timeslot_ref NOT included - will be filled by Airtable automation
       });
     } catch (e) {
       console.error('[book] create booking failed', e);
