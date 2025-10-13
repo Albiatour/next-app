@@ -146,7 +146,7 @@ export async function POST(req) {
     }
 
     // 3) Écriture "quasi atomique"
-    // 3a) Générer booking_id et booking_code uniques
+    // 3a) Générer booking_id unique
     const bookingId = uuidv4();
     const dateForCode = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
     const bookingCode = `BK-${dateForCode}-${bookingId.slice(0, 6).toUpperCase()}`;
@@ -156,7 +156,6 @@ export async function POST(req) {
       // Payload avec uniquement les champs existants dans Airtable
       const bookingFields = {
         booking_id: bookingId,
-        booking_code: bookingCode,
         name,
         email,
         phone,
