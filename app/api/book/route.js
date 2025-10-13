@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export const dynamic = 'force-dynamic';
 
 // ---------- Validators ----------
@@ -144,13 +146,17 @@ export async function POST(req) {
     }
 
     // 3) Écriture "quasi atomique"
-    // 3a) Créer la réservation (whitelist stricte des champs valides)
-    const bookingId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
+    // 3a) Générer booking_id et booking_code uniques
+    const bookingId = uuidv4();
+    const dateForCode = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
+    const bookingCode = `BK-${dateForCode}-${bookingId.slice(0, 6).toUpperCase()}`;
 
     let created; // pour rollback si update capacity échoue
     try {
       // Payload avec uniquement les champs existants dans Airtable
       const bookingFields = {
+        booking_id: bookingId,
+        booking_code: bookingCode,
         name,
         email,
         phone,
@@ -187,8 +193,8 @@ export async function POST(req) {
       return Response.json({ status: 'error', code: 'CAPACITY_UPDATE_FAILED', message: 'Could not update capacity.' }, { status: 500 });
     }
 
-    console.info('[book] success', { bookingId, restaurant, dateISO, time, partySize });
-    return Response.json({ status: 'ok', bookingId }, { status: 200 });
+    console.info('[book] success', { bookingId, bookingCode, restaurant, dateISO, time, partySize });
+    return Response.json({ status: 'ok', bookingId, bookingCode }, { status: 200 });
 
   } catch (err) {
     const msg = String(err?.message || 'INTERNAL');

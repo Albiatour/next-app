@@ -147,6 +147,7 @@ export default function Home() {
         name: customerName,
         email: emailVal,
         phone: phoneVal,
+        comments: comments.trim(),
         idempotencyKey: genIdemKey()
       }
       
@@ -169,11 +170,13 @@ export default function Home() {
       }
       
       // Succès : Afficher l'écran de confirmation
-      const bookingId = data.id || data.bookingId || 'N/A'
+      const bookingId = data.bookingId || data.id || 'N/A'
+      const bookingCode = data.bookingCode || data.booking_code || ''
       const confirmationName = `${firstName.trim()} ${lastName.trim()}`.trim() || 'Client'
       
       setConfirmation({
         bookingId,
+        bookingCode,
         dateEU: toEU(selectedDate),
         time,
         partySize,
@@ -309,6 +312,11 @@ export default function Home() {
                 <p className="text-sm text-gray-600 mt-3">
                   Votre réservation a bien été enregistrée. Vous recevrez une confirmation par email.
                 </p>
+                {confirmation.bookingCode && (
+                  <p className="text-lg font-mono font-bold text-emerald-600 mt-2">
+                    {confirmation.bookingCode}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3 mb-6">
