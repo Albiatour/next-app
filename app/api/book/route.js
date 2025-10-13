@@ -144,24 +144,30 @@ export async function POST(req) {
     }
 
     // 3) Écriture "quasi atomique"
-    // 3a) Créer la réservation
+    // 3a) Créer la réservation (whitelist stricte des champs valides)
     const bookingId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
-    const slot_id_value = `${dateISO}|${restaurant}|${time}`;
 
     let created; // pour rollback si update capacity échoue
     try {
-      created = await airtableCreate(T_BOOKS, {
-        booking_id: bookingId,
+      // Payload avec uniquement les champs existants dans Airtable
+      const bookingFields = {
+        name,
+        email,
+        phone,
+        party_size: partySize,
         restaurant_slug_raw: restaurant,
-        slot_id: slot_id_value,
         date_iso_raw: dateISO,
         time_24h_raw: time,
-        party_size: partySize,
-        name, email, phone,
         status: 'confirmed',
         idempotency_key: idemKey
-        // timeslot_ref NOT included - will be filled by Airtable automation
-      });
+      };
+
+      // Ajouter comments seulement s'il existe
+      if (body.comments && body.comments.trim()) {
+        bookingFields.comments = body.comments.trim();
+      }
+
+      created = await airtableCreate(T_BOOKS, bookingFields);
     } catch (e) {
       console.error('[book] create booking failed', e);
       return Response.json({ status: 'error', code: 'CREATE_FAILED', message: 'Could not create booking.' }, { status: 500 });
