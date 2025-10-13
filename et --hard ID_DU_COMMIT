@@ -1,0 +1,45 @@
+* [33mde0911c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m majjjjjjj
+* [33mbf50b96[m majjj
+* [33m68a4d94[m majjj
+* [33me36a5df[m maj
+* [33me3f2b6b[m maj
+* [33me3dc37a[m maj
+* [33m0266530[m maj
+* [33m236de2d[m maj
+* [33md906963[m maj
+* [33mab77706[m _raw
+* [33m55ac079[m update commentaire
+* [33m2d5ab2b[m updated
+* [33mf3f7897[m updated again
+* [33mddd6e39[m updated_confirmation_page
+* [33m83c3c0d[m new dates
+* [33m70d012d[m couverts_1
+* [33md20e0fb[m updated
+* [33m6a64231[m 1st draft app live api
+* [33m4898fb8[m feat: POST /api/book (idempotence + capacity + atomic write)
+* [33mfb22411[m fix: read time_24h correctly from Airtable
+* [33m8bf7374[m deploy correct /api/availability route
+* [33md82949e[m feat: /api/availability (EU date -> ISO, Airtable)
+* [33mb39e0c1[m switch /api/ping to JS
+* [33m65410be[m add /api/ping route
+* [33m0c9f8cb[m floating & couverts number
+* [33m1625899[m floating_good
+* [33m7954e4d[m espace vertical
+* [33mb6044ee[m floating
+* [33m9176990[m edit mandatory
+* [33mc75f970[m edit - nombre de couvert
+* [33mbadf563[m contour vert
+* [33m7612b76[m mobile first - minimalist
+* [33m65e7f5a[m mobile + light
+* [33m77ac331[m mobile app
+* [33mcab86e5[m light theme + green button
+* [33m87d2b0f[m fix sans phrase inutile
+* [33m34d62c3[m scroll horizontal
+* [33m3f98140[m scrollage horizontal
+* [33m9c0eb84[m add reservation form to demo page
+* [33m79dceba[m fix: use next/link on /demo
+* [33m83bf439[m add demo page working
+* [33m7489a56[m fix(/demo): client component + slots
+* [33m9468d93[m update homepage with title + button
+* [33mc634121[m update homepage with hello alexandre
+* [33mbbf3f2b[m first commit
