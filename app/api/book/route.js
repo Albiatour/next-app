@@ -1,6 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export const dynamic = 'force-dynamic';
+
+// Read mono-restaurant slug from env
+const RESTAURANT_SLUG = process.env.NEXT_PUBLIC_RESTAURANT_SLUG;
 
 // ---------- Validators ----------
 function toIsoFromInput(input) {
@@ -112,22 +115,35 @@ export async function POST(req) {
       return Response.json({ status: 'error', code: 'MISSING_ENV' }, { status: 500 });
     }
 
+    // Check restaurant slug env var
+    if (!RESTAURANT_SLUG) {
+      return Response.json({ status: 'error', code: 'MISSING_ENV', message: 'NEXT_PUBLIC_RESTAURANT_SLUG not set' }, { status: 500 });
+    }
+
     const body = await req.json().catch(() => ({}));
-    const restaurant = assertNonEmpty(body.restaurant, 'INVALID_RESTAURANT');
+    // Ignore any client-sent restaurant slug (do NOT read restaurant_slug_raw from request)
+    // Always set restaurant from ENV
+    const restaurant = RESTAURANT_SLUG;
     const dateISO    = toIsoFromInput(assertNonEmpty(body.date, 'INVALID_DATE_FORMAT'));
     const time       = assertTimeHHmm(body.time);
     const partySize  = parsePartySize(body.partySize);
     const name       = assertNonEmpty(body.name, 'INVALID_NAME');
     const email      = assertNonEmpty(body.email, 'INVALID_EMAIL');   // validation simple
     const phone      = assertNonEmpty(body.phone, 'INVALID_PHONE');
+    const comments   = body.comments || '';
     const idemKey    = assertNonEmpty(body.idempotencyKey, 'INVALID_IDEMPOTENCY_KEY');
 
     // 1) Idempotence: si on a déjà traité cette demande, renvoyer le même résultat
     const existing = await findBookingByIdempotency(idemKey);
     if (existing) {
       const bId = existing.fields?.booking_id;
+      const bCode = existing.fields?.booking_code;
       console.info('[book] idempotency hit', idemKey, bId);
-      return Response.json({ status: 'ok', bookingId: bId }, { status: 200 });
+      return Response.json({ 
+        status: 'ok', 
+        booking_id: bId,
+        booking_code: bCode
+      }, { status: 200 });
     }
 
     // 2) Contrôle de capacité
@@ -146,31 +162,28 @@ export async function POST(req) {
     }
 
     // 3) Écriture "quasi atomique"
-    // 3a) Générer booking_id unique
-    const bookingId = uuidv4();
-    const dateForCode = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
-    const bookingCode = `BK-${dateForCode}-${bookingId.slice(0, 6).toUpperCase()}`;
+    // 3a) Générer booking_id et booking_code uniques
+    const booking_id = randomUUID();
+    const ymd = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const booking_code = `BK-${ymd}-${booking_id.slice(0,6).toUpperCase()}`;
 
     let created; // pour rollback si update capacity échoue
     try {
-      // Payload avec uniquement les champs existants dans Airtable
+      // Airtable create payload — send only existing fields
       const bookingFields = {
-        booking_id: bookingId,
+        booking_id,
+        booking_code,
         name,
         email,
         phone,
+        comments,
         party_size: partySize,
-        restaurant_slug_raw: restaurant,
-        date_iso_raw: dateISO,
-        time_24h_raw: time,
-        status: 'confirmed',
-        idempotency_key: idemKey
+        status: 'confirmed',                 // e.g. "confirmed"
+        idempotency_key: idemKey,            // from client
+        restaurant_slug_raw: restaurant,     // from ENV (forced)
+        date_iso_raw: dateISO,               // from client
+        time_24h_raw: time                   // from client
       };
-
-      // Ajouter comments seulement s'il existe
-      if (body.comments && body.comments.trim()) {
-        bookingFields.comments = body.comments.trim();
-      }
 
       created = await airtableCreate(T_BOOKS, bookingFields);
     } catch (e) {
@@ -192,8 +205,13 @@ export async function POST(req) {
       return Response.json({ status: 'error', code: 'CAPACITY_UPDATE_FAILED', message: 'Could not update capacity.' }, { status: 500 });
     }
 
-    console.info('[book] success', { bookingId, bookingCode, restaurant, dateISO, time, partySize });
-    return Response.json({ status: 'ok', bookingId, bookingCode }, { status: 200 });
+    console.info('[book] success', { booking_id, booking_code, restaurant, dateISO, time, partySize });
+    // Response payload — return IDs to the front
+    return Response.json({
+      status: 'ok',
+      booking_id,
+      booking_code
+    }, { status: 200 });
 
   } catch (err) {
     const msg = String(err?.message || 'INTERNAL');

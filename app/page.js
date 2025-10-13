@@ -170,8 +170,8 @@ export default function Home() {
       }
       
       // Succès : Afficher l'écran de confirmation
-      const bookingId = data.bookingId || data.id || 'N/A'
-      const bookingCode = data.bookingCode || data.booking_code || ''
+      const bookingId = data.booking_id || data.bookingId || data.id || 'N/A'
+      const bookingCode = data.booking_code || data.bookingCode || ''
       const confirmationName = `${firstName.trim()} ${lastName.trim()}`.trim() || 'Client'
       
       setConfirmation({
