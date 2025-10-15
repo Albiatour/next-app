@@ -99,27 +99,6 @@ export default function Home() {
   }, [restaurant, restaurantSlug])
   
   const ctaLabel = `Réserver une table chez ${displayName}`
-  
-  // ========== BRAND COLOR : Calculé inline depuis restaurant.brand_hex ==========
-  const brandHex = restaurant?.brand_hex?.trim()
-  
-  // Helpers inline
-  const hexToRgbCss = (hex) => {
-    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec((hex||'').trim())
-    if (!m) return null
-    const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16)
-    return `rgb(${r} ${g} ${b})`
-  }
-  
-  const isDarkHex = (hex) => {
-    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec((hex||'').trim())
-    if (!m) return false
-    const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16)
-    return (r * 299 + g * 587 + b * 114) / 1000 < 128
-  }
-  
-  const BG = brandHex && /^#([0-9a-fA-F]{6})$/.test(brandHex) ? hexToRgbCss(brandHex) : null
-  const TXT = BG && isDarkHex(brandHex) ? 'white' : 'black'
 
   // ========== STATES : Formulaire et réservation ==========
   // Note: selectedDate stocke maintenant un objet Date (pas une string EU)
@@ -355,15 +334,9 @@ export default function Home() {
         {/* ========== ÉCRAN DE CONFIRMATION (affiché après booking réussi) ========== */}
         {confirmation && (
           <section className="mb-8">
-            <div 
-              style={BG ? { borderColor: BG } : undefined}
-              className="rounded-2xl border bg-white p-6 md:p-8 shadow-lg"
-            >
+            <div className="rounded-2xl border border-brand bg-white p-6 md:p-8 shadow-lg">
               <div className="text-center mb-6">
-                <div 
-                  style={BG ? { backgroundColor: BG ? `${BG.replace('rgb(', 'rgba(').replace(')', ', 0.1)')}` : undefined } : undefined}
-                  className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
-                >
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-light mb-4">
                   <span className="text-3xl">✅</span>
                 </div>
                 <h2 className="text-2xl font-bold text-zinc-800 mb-2">Réservation confirmée !</h2>
@@ -372,7 +345,7 @@ export default function Home() {
                   Votre réservation a bien été enregistrée. Vous recevrez une confirmation par email.
                 </p>
                 {confirmation.bookingCode && (
-                  <p className="text-lg font-mono font-bold mt-2" style={BG ? { color: BG } : undefined}>
+                  <p className="text-lg font-mono font-bold mt-2 text-brand">
                     {confirmation.bookingCode}
                   </p>
                 )}
@@ -402,8 +375,7 @@ export default function Home() {
 
               <button
                 onClick={handleNewReservation}
-                style={BG ? { backgroundColor: BG, color: TXT } : undefined}
-                className="w-full rounded-xl px-4 py-3 font-medium shadow-md hover:opacity-95 active:opacity-90 focus:outline-none"
+                className="btn-brand w-full rounded-xl px-4 py-3 font-medium shadow-md focus:outline-none focus:ring-2"
               >
                 Nouvelle réservation
               </button>
@@ -420,8 +392,7 @@ export default function Home() {
             onClick={handleScrollToBooking}
             aria-label={ctaLabel}
             title={ctaLabel}
-            style={BG ? { backgroundColor: BG, color: TXT } : undefined}
-            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl px-6 py-3 font-medium shadow-md hover:opacity-95 active:opacity-90 focus:outline-none text-balance whitespace-normal text-center"
+            className="btn-brand w-full md:w-auto inline-flex items-center justify-center rounded-xl px-6 py-3 font-medium shadow-md focus:outline-none focus:ring-2 text-balance whitespace-normal text-center"
           >
             {ctaLabel}
           </button>
@@ -435,8 +406,6 @@ export default function Home() {
               <DaysScroller
                 selected={selectedDate}
                 onSelect={handleDateChange}
-                brandBg={BG}
-                brandTxt={TXT}
               />
               {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
             </div>
@@ -474,10 +443,9 @@ export default function Home() {
                           onClick={() => s.isBookable ? setSelectedTime(s.time) : null}
                           disabled={isDisabled}
                           title={tooltipText}
-                          style={isSelected && BG ? { backgroundColor: BG, color: TXT, borderColor: BG } : undefined}
-                          className={`w-full rounded-full border px-3 py-2 text-sm shadow-sm transition ${
+                          className={`chip-brand w-full rounded-full border px-3 py-2 text-sm shadow-sm transition ${
                             isSelected 
-                              ? '' 
+                              ? 'selected' 
                               : isDisabled
                                 ? 'border-zinc-200 bg-zinc-100 text-zinc-400 cursor-not-allowed'
                                 : 'border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300'
@@ -507,11 +475,8 @@ export default function Home() {
             
             {/* ========== MESSAGE D'AIDE : Créneau sélectionné ========== */}
             {selectedTime && (
-              <div 
-                style={BG ? { backgroundColor: `${BG.replace('rgb(', 'rgba(').replace(')', ', 0.1)')}`, borderColor: BG } : undefined}
-                className="rounded-lg border px-4 py-2.5"
-              >
-                <p className="text-sm" style={BG ? { color: BG } : undefined}>
+              <div className="rounded-lg border bg-brand-light px-4 py-2.5">
+                <p className="text-sm text-brand">
                   Créneau choisi : <strong>{formatTimeLabel(selectedTime)}</strong> le {formatLongFrenchDate(selectedDate)}.
                 </p>
               </div>
@@ -525,7 +490,6 @@ export default function Home() {
                 value={firstName} 
                 onChange={(e) => setFirstName(e.target.value)} 
                 error={errors.firstName}
-                brandColor={BG}
               />
               <InputField 
                 id="lastName" 
@@ -535,7 +499,6 @@ export default function Home() {
                 value={lastName} 
                 onChange={(e) => setLastName(e.target.value)} 
                 error={errors.lastName}
-                brandColor={BG}
               />
               <InputField 
                 id="email" 
@@ -546,7 +509,6 @@ export default function Home() {
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 error={errors.email}
-                brandColor={BG}
               />
               <InputField 
                 id="phone" 
@@ -557,7 +519,6 @@ export default function Home() {
                 value={phone} 
                 onChange={(e) => setPhone(e.target.value)} 
                 error={errors.phone}
-                brandColor={BG}
               />
               <InputField 
                 id="covers" 
@@ -572,7 +533,6 @@ export default function Home() {
                 value={covers} 
                 onChange={handleCoversChange} 
                 error={errors.covers}
-                brandColor={BG}
               />
               <TextareaField 
                 id="comments" 
@@ -580,7 +540,6 @@ export default function Home() {
                 className="md:col-span-2" 
                 value={comments} 
                 onChange={(e) => setComments(e.target.value)}
-                brandColor={BG}
               />
 
               {/* ========== BOUTON CONFIRMATION (ÉTAPE 2) ========== */}
@@ -589,8 +548,7 @@ export default function Home() {
                   type="button"
                   onClick={handleConfirmReservation}
                   disabled={confirming}
-                  style={BG ? { backgroundColor: BG, color: TXT } : undefined}
-                  className="w-full rounded-xl px-4 py-3 font-medium shadow-md hover:opacity-95 active:opacity-90 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-brand w-full rounded-xl px-4 py-3 font-medium shadow-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {confirming ? 'Confirmation en cours...' : 'Confirmer ma réservation'}
                 </button>
@@ -607,18 +565,11 @@ export default function Home() {
         {/* ========== ZONE DE MESSAGES : Succès / Erreur ========== */}
         {message && (
           <section className="mb-8">
-            <div 
-              style={message.type === 'success' && BG ? {
-                backgroundColor: `${BG.replace('rgb(', 'rgba(').replace(')', ', 0.1)')}`,
-                borderColor: BG,
-                color: BG
-              } : undefined}
-              className={`rounded-xl border px-4 py-3 shadow-sm ${
-                message.type === 'success' 
-                  ? '' 
-                  : 'bg-red-50 border-red-200 text-red-800'
-              }`}
-            >
+            <div className={`rounded-xl border px-4 py-3 shadow-sm ${
+              message.type === 'success' 
+                ? 'bg-brand-light text-brand' 
+                : 'bg-red-50 border-red-200 text-red-800'
+            }`}>
               <p className="text-sm font-medium">{message.text}</p>
             </div>
           </section>
@@ -633,7 +584,7 @@ export default function Home() {
 }
 
 // Internal component: horizontal day scroller
-function DaysScroller({ selected, onSelect, brandBg, brandTxt, totalDays = 60 }) {
+function DaysScroller({ selected, onSelect, totalDays = 60 }) {
   const containerRef = useRef(null)
   const [canLeft, setCanLeft] = useState(false)
   const [canRight, setCanRight] = useState(true)
@@ -714,8 +665,7 @@ function DaysScroller({ selected, onSelect, brandBg, brandTxt, totalDays = 60 })
                 onClick={() => onSelect(new Date(d))}
                 role="option"
                 aria-selected={active}
-                style={active && brandBg ? { backgroundColor: brandBg, color: brandTxt, borderColor: brandBg } : undefined}
-                className="min-w-[70px] snap-start rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center shadow-sm flex flex-col items-center gap-0.5"
+                className={`chip-brand min-w-[70px] snap-start rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center shadow-sm flex flex-col items-center gap-0.5 ${active ? 'selected' : ''}`}
               >
                 <div className="text-[11px] leading-4 text-zinc-500">{shortDay(d)}</div>
                 <div className="text-lg font-bold leading-5 text-zinc-800">{d.getDate()}</div>
