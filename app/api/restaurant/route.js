@@ -37,32 +37,33 @@ export async function GET(req) {
     //   brand_hex: record.fields.brand_hex
     // })
 
-    // Mock pour l'instant (simule Airtable)
+    // Mock pour l'instant (simule Airtable avec champs explicites)
+    // fields: ['slug','name','brand_hex','hero_image_url']
     const mockRestaurants = {
-      sarrasin: { 
-        slug: 'sarrasin', 
-        display_name: 'Sarrasin', 
-        brand_hex: '#7F4F24' 
-      },
       bistro: { 
         slug: 'bistro', 
+        name: 'Bistro',
         display_name: 'Bistro', 
-        brand_hex: '#3B82F6' 
+        brand_hex: '#7F4F24',
+        hero_image_url: null
+      },
+      sarrasin: { 
+        slug: 'sarrasin', 
+        name: 'Sarrasin',
+        display_name: 'Sarrasin', 
+        brand_hex: '#0E7490',
+        hero_image_url: null
       }
     }
 
     const restaurant = mockRestaurants[slug]
 
     if (!restaurant) {
-      // Fallback par défaut (pas de couleur)
-      return Response.json({
-        slug: slug,
-        display_name: slug.charAt(0).toUpperCase() + slug.slice(1),
-        brand_hex: null
-      })
+      console.warn('[restaurant] Restaurant not found:', slug)
+      return Response.json({ error: 'Restaurant not found' }, { status: 404 })
     }
 
-    console.log('[restaurant] Serving data for:', slug, '→', restaurant.brand_hex)
+    console.log('THEME', slug, restaurant.brand_hex)
     return Response.json(restaurant)
 
   } catch (err) {
