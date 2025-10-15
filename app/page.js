@@ -638,7 +638,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
               <button
                 key={d.toISOString()}
                 type="button"
-                onClick={() => onSelect(new Date(d))}
+                onClick={() => onSelect(d)}
                 role="option"
                 aria-selected={active}
                 className={`min-w-[70px] snap-start rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center shadow-sm flex flex-col items-center gap-0.5 ${active ? 'ring-2 ring-[var(--brand)] border-[var(--brand)]' : ''}`}
