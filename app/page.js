@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { InputField, TextareaField } from '../components/InputField.jsx'
+import { getThemeFor } from '@/lib/theme'
 
 // ========== HELPERS : Conversion de dates ==========
 // Convertit un objet Date en format européen DD/MM/YYYY
@@ -85,6 +86,7 @@ export default function Home() {
 
   // ========== RESTAURANT INFO : Pour l'affichage UI uniquement ==========
   const restaurantSlug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG || 'sarrasin'
+  const theme = useMemo(() => getThemeFor(restaurantSlug), [restaurantSlug])
   const displayName = useMemo(() => {
     return restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1)
   }, [restaurantSlug])
@@ -492,7 +494,12 @@ export default function Home() {
                           <div className="flex flex-col items-center">
                             <span>{s.time}</span>
                             {isDisabled && (
-                              <span className="text-[10px] text-red-500">• complet</span>
+                              <span 
+                                className="text-[10px] font-medium"
+                                style={{ color: theme?.brand || '#7f1d1d' }}
+                              >
+                                • complet
+                              </span>
                             )}
                           </div>
                         </button>
