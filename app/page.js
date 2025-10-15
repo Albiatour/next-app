@@ -52,16 +52,30 @@ function formatTimeLabel(time) {
   return `${parseInt(hours, 10)}h${minutes}`
 }
 
-// Formate une date au format long français (ex: "08 octobre 2025")
+// Formate une date au format long français depuis ISO (ex: "2025-10-19" → "19 octobre 2025")
 function formatLongFrenchDate(date) {
   if (!date) return ''
-  const d = new Date(date)
+  // Si c'est un objet Date, convertir en ISO
+  let isoString
+  if (date instanceof Date) {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    isoString = `${y}-${m}-${d}`
+  } else {
+    isoString = date
+  }
+  
+  // Parser ISO vers Date UTC (évite timezone issues)
+  const [year, month, day] = isoString.split('-').map(Number)
+  const dt = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+  
   return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
+    timeZone: 'UTC',
+    day: 'numeric',
     month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC'
-  }).format(d)
+    year: 'numeric'
+  }).format(dt)
 }
 
 export default function Home() {
@@ -450,13 +464,21 @@ export default function Home() {
             <h3 className="text-lg font-semibold text-zinc-800 mb-4">Vos informations</h3>
             
             {/* ========== MESSAGE D'AIDE : Créneau sélectionné ========== */}
-            {selectedTime && (
-              <div className="rounded-lg bg-[var(--accent)] border border-[var(--brand)] px-4 py-2.5">
-                <p className="text-sm text-[var(--brand)]">
-                  Créneau choisi : <strong>{formatTimeLabel(selectedTime)}</strong> le {formatLongFrenchDate(selectedDate)}.
-                </p>
-              </div>
-            )}
+            {selectedTime && (() => {
+              const summaryDate = formatLongFrenchDate(selectedDate)
+              // Log temporaire de debug
+              console.table({
+                clickedDate: selectedDate instanceof Date ? selectedDate.toISOString().split('T')[0] : selectedDate,
+                shownDate: summaryDate
+              })
+              return (
+                <div className="rounded-lg bg-[var(--accent)] border border-[var(--brand)] px-4 py-2.5">
+                  <p className="text-sm text-[var(--brand)]">
+                    Créneau choisi : <strong>{formatTimeLabel(selectedTime)}</strong> le {summaryDate}.
+                  </p>
+                </div>
+              )
+            })()}
             <div className="grid grid-cols-1 gap-x-3 gap-y-2 md:grid-cols-2 md:gap-x-4 md:gap-y-3">
               <InputField 
                 id="firstName" 
