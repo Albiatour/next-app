@@ -1,6 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { hexToRGB, isDark } from '../lib/color'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,10 +19,20 @@ export const metadata = {
 // Force no cache pour mise à jour immédiate
 export const revalidate = 0
 
+// Helpers couleur côté serveur
+function hexToRgbTuple(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex?.trim() || '')
+  if (!m) return null
+  return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)]
+}
+
+function isDark([r, g, b]) {
+  return (r * 299 + g * 587 + b * 114) / 1000 < 128
+}
+
 // Récupérer les données restaurant côté serveur
 async function getRestaurant(slug) {
   try {
-    // En production, utiliser l'URL complète ou variable d'environnement
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     const res = await fetch(`${baseUrl}/api/restaurant?slug=${slug}`, {
       cache: 'no-store'
@@ -42,16 +51,49 @@ export default async function RootLayout({ children }) {
   const slug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG || 'bistro'
   const restaurant = await getRestaurant(slug)
   
-  // Lire brand_hex sans fallback (uniquement depuis Airtable)
+  // Calculer les couleurs
   const brandHex = restaurant?.brand_hex?.trim()
-  const valid = !!brandHex && /^#([0-9a-fA-F]{6})$/.test(brandHex)
+  const rgb = hexToRgbTuple(brandHex || '')
   
-  const contrast = valid && isDark(brandHex) ? 'dark' : 'light'
+  let bg, txt
+  if (rgb) {
+    bg = `rgb(${rgb[0]} ${rgb[1]} ${rgb[2]})`
+    txt = isDark(rgb) ? '#ffffff' : '#111111'
+  } else {
+    console.warn('[layout] brand_hex manquant/invalide pour', restaurant?.slug || slug)
+  }
   
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <div key={slug} className="min-h-dvh">
+          {rgb && (
+            <style
+              dangerouslySetInnerHTML={{
+                __html: `
+            /* Bouton principal */
+            [data-theme="${slug}"] .btn-brand{background-color:${bg};color:${txt};}
+            [data-theme="${slug}"] .btn-brand:hover{filter:brightness(0.95)}
+            [data-theme="${slug}"] .btn-brand:active{filter:brightness(0.9)}
+            /* Chips date/heure sélectionnés */
+            [data-theme="${slug}"] .chip-brand.selected{background-color:${bg};color:${txt};border-color:${bg};}
+            /* Bordures/anneaux d'accent */
+            [data-theme="${slug}"] .border-brand{border-color:${bg};}
+            [data-theme="${slug}"] .focus-brand:focus,[data-theme="${slug}"] .focus-brand:focus-visible{outline:2px solid ${bg};border-color:${bg};}
+            /* Liens/texte d'accent (confirmation) */
+            [data-theme="${slug}"] .text-brand{color:${bg};}
+            /* Icône succès/Badge */
+            [data-theme="${slug}"] .badge-brand{background-color:${bg};color:${txt};}
+            /* Background léger 10% */
+            [data-theme="${slug}"] .bg-brand-light{background-color:rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.1);border-color:${bg};}
+          `
+              }}
+            />
+          )}
+          <div data-theme={slug}>
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );
