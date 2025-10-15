@@ -122,22 +122,45 @@ export default function Home() {
     setMessage(null) // Effacer les anciens messages
     
     try {
-      const dateEU = toEU(selectedDate) // Convertir en DD/MM/YYYY
-      const partySize = parseInt(covers || '1', 10)
+      // Convertir la date sélectionnée en ISO (YYYY-MM-DD)
+      const y = selectedDate.getFullYear()
+      const m = String(selectedDate.getMonth() + 1).padStart(2, '0')
+      const d = String(selectedDate.getDate()).padStart(2, '0')
+      const dateISO = `${y}-${m}-${d}`
+      
+      // Fetch depuis le nouvel endpoint /api/timeslots
       const params = new URLSearchParams({
-        restaurant: 'sarrasin',
-        date: dateEU,
-        partySize: String(partySize)
+        restaurantSlug: restaurantSlug
       })
       
-      const res = await fetch(`/api/availability?${params}`)
+      const res = await fetch(`/api/timeslots?${params}`, {
+        cache: 'no-store'
+      })
       const data = await res.json()
       
+      console.log('[loadAvailability] Raw API response:', data)
+      
       if (!res.ok) {
-        throw new Error(data.error || 'Erreur de chargement')
+        throw new Error(data.message || data.error || 'Erreur de chargement')
       }
       
-      setSlots(data.slots || [])
+      // Filtrer les créneaux pour la date sélectionnée
+      const slotsForDate = (data.slots || []).filter(slot => {
+        if (!slot.start_at) return false
+        const slotDate = slot.start_at.split('T')[0] // Extract YYYY-MM-DD
+        return slotDate === dateISO
+      })
+      
+      // Mapper au format attendu par l'UI
+      const formattedSlots = slotsForDate.map(slot => ({
+        time: slot.time || slot.start_at?.split('T')[1]?.substring(0, 5) || 'N/A',
+        capacityLeft: slot.capacity || 0,
+        isBookable: (slot.capacity || 0) > 0
+      }))
+      
+      console.log('[loadAvailability] Slots for', dateISO, ':', formattedSlots)
+      
+      setSlots(formattedSlots)
     } catch (err) {
       console.error('Erreur loadAvailability:', err)
       setMessage({ type: 'error', text: 'Erreur de chargement des créneaux' })
