@@ -75,29 +75,13 @@ export default function Home() {
   
   // Charger les données restaurant (brand_hex, display_name, etc.)
   useEffect(() => {
-    if (!restaurantSlug) return
-
-    // Fetch depuis /api/restaurant avec cache désactivé
-    fetch(`/api/restaurant?slug=${restaurantSlug}`, {
-      cache: 'no-store' // ⚠️ IMPORTANT: Pas de cache pour MAJ sans redéploiement
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json()
-      })
-      .then(data => {
-        console.log('[page] Restaurant loaded:', data)
-        setRestaurant(data)
-      })
-      .catch(err => {
-        console.error('[page] Erreur fetch restaurant:', err)
-        // Fallback en cas d'erreur
-        setRestaurant({ 
-          slug: restaurantSlug, 
-          display_name: restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1),
-          brand_hex: '#059669'
-        })
-      })
+    // TODO: Remplacer par un vrai fetch depuis /api/restaurant?slug=${restaurantSlug}
+    // Pour l'instant, mock basé sur le slug
+    const mockRestaurants = {
+      sarrasin: { slug: 'sarrasin', display_name: 'Sarrasin', brand_hex: '#7F4F24' },
+      bistro: { slug: 'bistro', display_name: 'Bistro', brand_hex: '#3B82F6' }
+    }
+    setRestaurant(mockRestaurants[restaurantSlug] || { slug: restaurantSlug, display_name: restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1), brand_hex: '#059669' })
   }, [restaurantSlug])
   
   const displayName = useMemo(() => {
