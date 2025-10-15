@@ -51,14 +51,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div
-          key={slug}
-          style={valid ? { '--brand': hexToRGB(brandHex) } : undefined}
-          data-brand-contrast={valid ? contrast : undefined}
-          className="min-h-dvh"
-        >
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
