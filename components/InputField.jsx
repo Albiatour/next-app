@@ -1,6 +1,9 @@
 "use client"
+import { useState } from 'react'
 
-export function InputField({ id, label, type = "text", value, onChange, required, placeholder, error, className = "", autoComplete, min, max, step, pattern, inputMode }) {
+export function InputField({ id, label, type = "text", value, onChange, required, placeholder, error, className = "", autoComplete, min, max, step, pattern, inputMode, brandColor }) {
+  const [focused, setFocused] = useState(false)
+  
   return (
     <div className={"relative mt-6 " + className}>
       <input
@@ -16,8 +19,11 @@ export function InputField({ id, label, type = "text", value, onChange, required
         step={step}
         pattern={pattern}
         inputMode={inputMode}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={focused && brandColor ? { outlineColor: brandColor, borderColor: brandColor } : undefined}
         className={[
-          "focus-brand peer w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900",
+          "peer w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900",
           "shadow-sm focus:outline-none focus:ring-2 focus:ring-inset",
           error ? "border-red-400" : ""
         ].join(" ")}
@@ -42,7 +48,9 @@ export function InputField({ id, label, type = "text", value, onChange, required
   )
 }
 
-export function TextareaField({ id, label, value, onChange, required, error, className = "" }) {
+export function TextareaField({ id, label, value, onChange, required, error, className = "", brandColor }) {
+  const [focused, setFocused] = useState(false)
+  
   return (
     <div className={"relative mt-6 " + className}>
       <textarea
@@ -52,8 +60,11 @@ export function TextareaField({ id, label, value, onChange, required, error, cla
         onChange={onChange}
         required={required}
         placeholder=" "
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={focused && brandColor ? { outlineColor: brandColor, borderColor: brandColor } : undefined}
         className={[
-          "focus-brand peer w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 min-h-[96px]",
+          "peer w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 min-h-[96px]",
           "shadow-sm focus:outline-none focus:ring-2 focus:ring-inset",
           error ? "border-red-400" : ""
         ].join(" ")}
@@ -78,7 +89,9 @@ export function TextareaField({ id, label, value, onChange, required, error, cla
   )
 }
 
-export function SelectField({ id, label, value, onChange, required, error, className = "", children }) {
+export function SelectField({ id, label, value, onChange, required, error, className = "", children, brandColor }) {
+  const [focused, setFocused] = useState(false)
+  
   return (
     <div className={"relative mt-6 " + className}>
       <select
@@ -86,8 +99,11 @@ export function SelectField({ id, label, value, onChange, required, error, class
         value={value}
         onChange={onChange}
         required={required}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={focused && brandColor ? { outlineColor: brandColor, borderColor: brandColor } : undefined}
         className={[
-          "focus-brand peer w-full appearance-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900",
+          "peer w-full appearance-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900",
           "shadow-sm focus:outline-none focus:ring-2 focus:ring-inset",
           error ? "border-red-400" : ""
         ].join(" ")}
