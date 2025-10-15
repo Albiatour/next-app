@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { InputField, TextareaField } from '../components/InputField.jsx'
+import { hexToRGB, isDark, getTextColor } from '../lib/color'
 
 // ========== HELPERS : Conversion de dates ==========
 // Convertit un objet Date en format européen DD/MM/YYYY
@@ -68,26 +69,33 @@ export default function Home() {
   const router = useRouter()
   const bookingRef = useRef(null)
 
-  // ========== RESTAURANT INFO : Nom d'affichage uniquement ==========
+  // ========== RESTAURANT INFO : Données depuis Airtable ==========
   const restaurantSlug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG || 'bistro'
   const [restaurant, setRestaurant] = useState(null)
   
-  // Charger le nom du restaurant pour l'affichage
+  // Charger les données restaurant (brand_hex, display_name, etc.)
   useEffect(() => {
     if (!restaurantSlug) return
 
+    // Fetch depuis /api/restaurant avec cache désactivé
     fetch(`/api/restaurant?slug=${restaurantSlug}`, {
-      cache: 'no-store'
+      cache: 'no-store' // ⚠️ IMPORTANT: Pas de cache pour MAJ sans redéploiement
     })
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data) setRestaurant(data)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.json()
       })
-      .catch(() => {
-        // Fallback silencieux
+      .then(data => {
+        console.log('[page] Restaurant loaded:', data)
+        setRestaurant(data)
+      })
+      .catch(err => {
+        console.error('[page] Erreur fetch restaurant:', err)
+        // Fallback en cas d'erreur
         setRestaurant({ 
           slug: restaurantSlug, 
-          display_name: restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1)
+          display_name: restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1),
+          brand_hex: '#059669'
         })
       })
   }, [restaurantSlug])
@@ -100,14 +108,27 @@ export default function Home() {
   
   const ctaLabel = `Réserver une table chez ${displayName}`
   
-  // ========== BRAND COLOR : Contraste texte basé sur data attribute (SSR) ==========
-  const [textColor, setTextColor] = useState('text-white')
+  // ========== BRAND COLOR : Couleur personnalisée depuis Airtable ==========
+  const brandHex = restaurant?.brand_hex?.trim()
+  const brandRgb = useMemo(() => {
+    if (!brandHex || !/^#([0-9a-fA-F]{6})$/.test(brandHex)) {
+      console.warn('brand_hex manquant/invalide pour', restaurant?.slug)
+      return '5 150 105' // emerald-600 par défaut
+    }
+    return hexToRGB(brandHex)
+  }, [brandHex, restaurant?.slug])
   
+  const textColor = useMemo(() => {
+    if (!brandHex) return 'text-white'
+    return getTextColor(brandHex)
+  }, [brandHex])
+  
+  // Appliquer la variable CSS --brand au document
   useEffect(() => {
-    // Lire le contraste depuis le data attribute posé en SSR
-    const contrast = document.body.getAttribute('data-brand-contrast')
-    setTextColor(contrast === 'light' ? 'text-black' : 'text-white')
-  }, [])
+    if (typeof document !== 'undefined' && brandRgb) {
+      document.documentElement.style.setProperty('--brand', brandRgb)
+    }
+  }, [brandRgb])
 
   // ========== STATES : Formulaire et réservation ==========
   // Note: selectedDate stocke maintenant un objet Date (pas une string EU)
