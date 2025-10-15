@@ -42,9 +42,17 @@ export default async function RootLayout({ children }) {
   const slug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG || 'bistro'
   const restaurant = await getRestaurant(slug)
   
-  // Lire brand_hex sans fallback (uniquement depuis Airtable)
+  // Calculer la couleur brand et le contraste
   const brandHex = restaurant?.brand_hex?.trim()
-  const valid = !!brandHex && /^#([0-9a-fA-F]{6})$/.test(brandHex)
+  const valid = brandHex && /^#([0-9a-fA-F]{6})$/.test(brandHex)
+  
+  let brandRGB
+  if (valid) {
+    brandRGB = hexToRGB(brandHex)
+  } else {
+    console.warn('[layout] brand_hex manquant/invalide pour', restaurant?.slug, '→ utilise fallback cyan-700')
+    brandRGB = '14 116 144' // cyan-700 fallback temporaire
+  }
   
   const contrast = valid && isDark(brandHex) ? 'dark' : 'light'
   
@@ -53,8 +61,8 @@ export default async function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div
           key={slug}
-          style={valid ? { '--brand': hexToRGB(brandHex) } : undefined}
-          data-brand-contrast={valid ? contrast : undefined}
+          style={{ '--brand': brandRGB }}
+          data-brand-contrast={contrast}
           className="min-h-dvh"
         >
           {children}
