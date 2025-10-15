@@ -378,8 +378,6 @@ export default function Home() {
 
         {/* BOOKING */}
         <section id="booking" ref={bookingRef} className="mb-8 scroll-mt-20">
-          <h2 className="text-xl font-bold text-zinc-800 mb-4">Choisir une date et un créneau</h2>
-
           <div className="grid gap-x-3 gap-y-4 md:grid-cols-2 md:gap-x-4 md:gap-y-5">
             <div className="space-y-2 md:space-y-2.5">
               <label className="block text-sm font-medium text-zinc-600 mb-1.5">Date</label>
