@@ -45,28 +45,18 @@ export default async function RootLayout({ children }) {
   // Calculer la couleur brand et le contraste
   const brandHex = restaurant?.brand_hex?.trim()
   const valid = brandHex && /^#([0-9a-fA-F]{6})$/.test(brandHex)
-  
-  let brandRGB
-  if (valid) {
-    brandRGB = hexToRGB(brandHex)
-  } else {
-    console.warn('[layout] brand_hex manquant/invalide pour', restaurant?.slug, '→ utilise fallback cyan-700')
-    brandRGB = '14 116 144' // cyan-700 fallback temporaire
-  }
-  
+  const brandRGB = valid ? hexToRGB(brandHex) : undefined
   const contrast = valid && isDark(brandHex) ? 'dark' : 'light'
   
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div
-          key={slug}
-          style={{ '--brand': brandRGB }}
-          data-brand-contrast={contrast}
-          className="min-h-dvh"
-        >
-          {children}
-        </div>
+      <body
+        key={slug}
+        data-brand-contrast={valid ? contrast : undefined}
+        style={valid ? { '--brand': brandRGB } : undefined}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
       </body>
     </html>
   );
