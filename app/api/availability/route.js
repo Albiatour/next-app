@@ -45,8 +45,15 @@ async function fetchSlots({ restaurant, isoDate }) {
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const restaurant = (searchParams.get('restaurant') || '').trim();
-    if (!restaurant) return Response.json({ status: 'error', code: 'MISSING_RESTAURANT' }, { status: 400 });
+    
+    // Read restaurant slug: query param > env var > fallback 'bistro'
+    const restaurantSlug = (searchParams.get('restaurant') || '').trim() 
+      || process.env.NEXT_PUBLIC_RESTAURANT_SLUG 
+      || 'bistro';
+    
+    console.log('ENV_SLUG', restaurantSlug);
+    
+    if (!restaurantSlug) return Response.json({ status: 'error', code: 'MISSING_RESTAURANT' }, { status: 400 });
 
     const isoDate = toIsoFromInput(searchParams.get('date') || '');
     const partySize = parsePartySize(searchParams.get('partySize'));
@@ -55,7 +62,7 @@ export async function GET(req) {
       return Response.json({ status: 'error', code: 'MISSING_ENV' }, { status: 500 });
     }
 
-    const data = await fetchSlots({ restaurant, isoDate });
+    const data = await fetchSlots({ restaurant: restaurantSlug, isoDate });
 
     const slots = (data.records || [])
       .map(r => {
@@ -74,9 +81,9 @@ export async function GET(req) {
       .filter(s => s.time !== 'N/A')
       .sort((a,b) => a.time.localeCompare(b.time));
 
-    console.info('[availability]', { restaurant, isoDate, partySize, count: slots.length });
+    console.info('[availability]', { restaurant: restaurantSlug, isoDate, partySize, count: slots.length });
 
-    return Response.json({ restaurant, date: isoDate, partySize, slots }, { status: 200 });
+    return Response.json({ restaurant: restaurantSlug, date: isoDate, partySize, slots }, { status: 200 });
   } catch (err) {
     const msg = err?.message || 'INTERNAL';
     const code = msg.includes('INVALID_DATE_FORMAT') ? 400
