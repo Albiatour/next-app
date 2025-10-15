@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import { InputField, TextareaField } from '../components/InputField.jsx'
 
 // ========== HELPERS : Conversion de dates ==========
@@ -104,71 +105,63 @@ export default function Home() {
   const [errors, setErrors] = useState({})
 
   // ========== STATES : Intégration API ==========
-  const [slots, setSlots] = useState([]) // Liste des créneaux depuis /api/availability
-  const [loading, setLoading] = useState(false) // Chargement des créneaux
   const [bookingLoading, setBookingLoading] = useState(false) // Réservation en cours
   const [confirming, setConfirming] = useState(false) // ÉTAPE 2 : Confirmation en cours
   const [message, setMessage] = useState(null) // {type:'success'|'error', text:string}
   const [confirmation, setConfirmation] = useState(null) // Écran de confirmation après booking réussi
 
-  // ========== FONCTION : Charger les créneaux depuis l'API ==========
-  const loadAvailability = async () => {
-    if (!selectedDate) {
-      setSlots([])
-      return
-    }
-    
-    setLoading(true)
-    setMessage(null) // Effacer les anciens messages
-    
-    try {
-      // Convertir la date sélectionnée en ISO (YYYY-MM-DD)
-      const y = selectedDate.getFullYear()
-      const m = String(selectedDate.getMonth() + 1).padStart(2, '0')
-      const d = String(selectedDate.getDate()).padStart(2, '0')
-      const dateISO = `${y}-${m}-${d}`
-      
-      // Fetch depuis le nouvel endpoint /api/timeslots
-      const params = new URLSearchParams({
-        restaurantSlug: restaurantSlug
-      })
-      
-      const res = await fetch(`/api/timeslots?${params}`, {
-        cache: 'no-store'
-      })
-      const data = await res.json()
-      
-      console.log('[loadAvailability] Raw API response:', data)
-      
-      if (!res.ok) {
-        throw new Error(data.message || data.error || 'Erreur de chargement')
-      }
-      
-      // Filtrer les créneaux pour la date sélectionnée
-      const slotsForDate = (data.slots || []).filter(slot => {
-        if (!slot.start_at) return false
-        const slotDate = slot.start_at.split('T')[0] // Extract YYYY-MM-DD
-        return slotDate === dateISO
-      })
-      
-      // Mapper au format attendu par l'UI
-      const formattedSlots = slotsForDate.map(slot => ({
-        time: slot.time || slot.start_at?.split('T')[1]?.substring(0, 5) || 'N/A',
-        capacityLeft: slot.capacity || 0,
-        isBookable: (slot.capacity || 0) > 0
-      }))
-      
-      console.log('[loadAvailability] Slots for', dateISO, ':', formattedSlots)
-      
-      setSlots(formattedSlots)
-    } catch (err) {
-      console.error('Erreur loadAvailability:', err)
-      setMessage({ type: 'error', text: 'Erreur de chargement des créneaux' })
-      setSlots([])
-    } finally {
-      setLoading(false)
-    }
+  // ========== FONCTION : Convertir date en ISO ==========
+  const dateToISO = (date) => {
+    if (!date) return null
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
   }
+
+  // ========== SWR : Charger les créneaux depuis l'API (toujours frais) ==========
+  const selectedDateISO = dateToISO(selectedDate)
+  const swrKey = selectedDateISO ? `/api/timeslots?restaurantSlug=${restaurantSlug}` : null
+  
+  const fetcher = (url) => fetch(url, { cache: 'no-store' }).then(res => res.json())
+  
+  const { data: apiData, error: apiError, isLoading, mutate } = useSWR(
+    swrKey,
+    fetcher,
+    { 
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 0,
+      refreshInterval: 30000 // Auto-refresh toutes les 30s
+    }
+  )
+
+  // Filtrer et formatter les créneaux pour la date sélectionnée
+  const slots = useMemo(() => {
+    if (!selectedDateISO || !apiData?.slots) return []
+    
+    console.log('[Timeslots] Raw API data:', apiData)
+    
+    // Filtrer pour la date sélectionnée
+    const slotsForDate = apiData.slots.filter(slot => {
+      if (!slot.start_at) return false
+      const slotDate = slot.start_at.split('T')[0]
+      return slotDate === selectedDateISO
+    })
+    
+    // Mapper au format UI
+    const formatted = slotsForDate.map(slot => ({
+      time: slot.time || slot.start_at?.split('T')[1]?.substring(0, 5) || 'N/A',
+      capacityLeft: slot.capacity || 0,
+      isBookable: (slot.capacity || 0) > 0
+    })).filter(s => s.time !== 'N/A')
+    
+    console.log('[Timeslots] Slots for', selectedDateISO, ':', formatted)
+    
+    return formatted
+  }, [selectedDateISO, apiData])
+
+  const loading = isLoading
 
   // ========== FONCTION : Réserver un créneau via l'API (ÉTAPE 2) ==========
   const reserve = async (time) => {
@@ -208,7 +201,13 @@ export default function Home() {
         // Gérer le cas "SLOT_FULL"
         if (data.code === 'SLOT_FULL') {
           setMessage({ type: 'error', text: 'Ce créneau est complet' })
-          await loadAvailability() // Recharger pour voir les nouvelles dispo
+          await mutate() // Recharger pour voir les nouvelles dispo
+          return
+        }
+        // Gérer le cas où le créneau n'existe plus
+        if (data.code === 'SLOT_NOT_FOUND' || data.code === 'INVALID_SLOT') {
+          setMessage({ type: 'error', text: 'Ce créneau n\'est plus disponible' })
+          await mutate() // Recharger pour voir les nouvelles dispo
           return
         }
         throw new Error(data.error || 'Erreur de réservation')
@@ -231,7 +230,7 @@ export default function Home() {
       
       setSelectedSlot(time) // Marquer le créneau sélectionné
       setSelectedTime(time) // Marquer le créneau sélectionné
-      await loadAvailability() // Recharger pour voir les nouvelles dispo
+      await mutate() // Recharger pour voir les nouvelles dispo
       
     } catch (err) {
       console.error('Erreur reserve:', err)
@@ -272,11 +271,8 @@ export default function Home() {
     await reserve(selectedTime)
   }
 
-  // ========== USEEFFECT : Charger les créneaux au démarrage et aux changements ==========
-  useEffect(() => {
-    loadAvailability()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, covers]) // Recharger si date ou nombre de couverts changent
+  // Note: SWR recharge automatiquement quand swrKey change (selectedDateISO)
+  // Pas besoin de useEffect manuel
 
   const isWeekend = (d) => {
     if (!d) return false
@@ -337,7 +333,7 @@ export default function Home() {
     setPhone('')
     setComments('')
     setErrors({})
-    loadAvailability()
+    mutate()
   }
 
   return (
@@ -433,8 +429,29 @@ export default function Home() {
                 {selectedDate && loading && (
                   <p className="text-sm text-zinc-400">Chargement des créneaux...</p>
                 )}
-                {selectedDate && !loading && availableSlots.length === 0 && (
-                  <p className="text-sm text-zinc-400">Aucun créneau disponible</p>
+                {selectedDate && apiError && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-red-500">Erreur de chargement des créneaux</p>
+                    <button
+                      type="button"
+                      onClick={() => mutate()}
+                      className="text-xs text-cyan-700 underline hover:text-cyan-800"
+                    >
+                      Réessayer
+                    </button>
+                  </div>
+                )}
+                {selectedDate && !loading && !apiError && availableSlots.length === 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-zinc-400">Aucun créneau disponible pour ce jour.</p>
+                    <button
+                      type="button"
+                      onClick={() => mutate()}
+                      className="text-xs text-cyan-700 underline hover:text-cyan-800"
+                    >
+                      🔄 Actualiser
+                    </button>
+                  </div>
                 )}
                 {selectedDate && !loading && availableSlots.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
