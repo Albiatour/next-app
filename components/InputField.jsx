@@ -18,7 +18,7 @@ export function InputField({ id, label, type = "text", value, onChange, required
         inputMode={inputMode}
         className={[
           "peer w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900",
-          "shadow-sm focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))] focus:ring-inset focus:border-[rgb(var(--brand))]",
+          "shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:ring-inset focus:border-[var(--brand)]",
           error ? "border-red-400" : ""
         ].join(" ")}
         aria-invalid={!!error}
@@ -29,7 +29,7 @@ export function InputField({ id, label, type = "text", value, onChange, required
         className={[
           "pointer-events-none absolute left-4 top-3 text-zinc-500 text-sm transition-all duration-200",
           "peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500",
-          "peer-focus:-top-2 peer-focus:text-xs peer-focus:text-[rgb(var(--brand))] peer-focus:bg-white peer-focus:px-1",
+          "peer-focus:-top-2 peer-focus:text-xs peer-focus:text-[var(--brand)] peer-focus:bg-white peer-focus:px-1",
           "peer-[&:not(:placeholder-shown)]:-top-2 peer-[&:not(:placeholder-shown)]:text-xs peer-[&:not(:placeholder-shown)]:text-zinc-700 peer-[&:not(:placeholder-shown)]:bg-white peer-[&:not(:placeholder-shown)]:px-1"
         ].join(" ")}
       >
@@ -54,7 +54,7 @@ export function TextareaField({ id, label, value, onChange, required, error, cla
         placeholder=" "
         className={[
           "peer w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900 min-h-[96px]",
-          "shadow-sm focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))] focus:ring-inset focus:border-[rgb(var(--brand))]",
+          "shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:ring-inset focus:border-[var(--brand)]",
           error ? "border-red-400" : ""
         ].join(" ")}
         aria-invalid={!!error}
@@ -65,7 +65,7 @@ export function TextareaField({ id, label, value, onChange, required, error, cla
         className={[
           "pointer-events-none absolute left-4 top-3 text-zinc-500 text-sm transition-all duration-200",
           "peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500",
-          "peer-focus:-top-2 peer-focus:text-xs peer-focus:text-[rgb(var(--brand))] peer-focus:bg-white peer-focus:px-1",
+          "peer-focus:-top-2 peer-focus:text-xs peer-focus:text-[var(--brand)] peer-focus:bg-white peer-focus:px-1",
           "peer-[&:not(:placeholder-shown)]:-top-2 peer-[&:not(:placeholder-shown)]:text-xs peer-[&:not(:placeholder-shown)]:text-zinc-700 peer-[&:not(:placeholder-shown)]:bg-white peer-[&:not(:placeholder-shown)]:px-1"
         ].join(" ")}
       >
@@ -88,7 +88,7 @@ export function SelectField({ id, label, value, onChange, required, error, class
         required={required}
         className={[
           "peer w-full appearance-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-900",
-          "shadow-sm focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))] focus:ring-inset focus:border-[rgb(var(--brand))]",
+          "shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:ring-inset focus:border-[var(--brand)]",
           error ? "border-red-400" : ""
         ].join(" ")}
         aria-invalid={!!error}
@@ -102,7 +102,7 @@ export function SelectField({ id, label, value, onChange, required, error, class
         className={[
           "pointer-events-none absolute left-4 top-3 text-zinc-500 text-sm transition-all duration-200",
           "peer-placeholder-shown:top-3 peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500",
-          "peer-focus:-top-2 peer-focus:text-xs peer-focus:text-[rgb(var(--brand))] peer-focus:bg-white peer-focus:px-1",
+          "peer-focus:-top-2 peer-focus:text-xs peer-focus:text-[var(--brand)] peer-focus:bg-white peer-focus:px-1",
           "peer-[&:not(:placeholder-shown)]:-top-2 peer-[&:not(:placeholder-shown)]:text-xs peer-[&:not(:placeholder-shown)]:text-zinc-700 peer-[&:not(:placeholder-shown)]:bg-white peer-[&:not(:placeholder-shown)]:px-1"
         ].join(" ")}
       >
