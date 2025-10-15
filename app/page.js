@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { InputField, TextareaField } from '../components/InputField.jsx'
 import { getThemeFor } from '@/lib/theme'
+import { toISODateOnly } from '@/lib/date'
 
 // ========== HELPERS : Conversion de dates ==========
 // Convertit un objet Date en format européen DD/MM/YYYY
@@ -112,20 +113,11 @@ export default function Home() {
   const [message, setMessage] = useState(null) // {type:'success'|'error', text:string}
   const [confirmation, setConfirmation] = useState(null) // Écran de confirmation après booking réussi
 
-  // ========== FONCTION : Convertir date en ISO ==========
-  const dateToISO = (date) => {
-    if (!date) return null
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    return `${y}-${m}-${d}`
-  }
-
   // ========== SWR : Charger les créneaux depuis l'API (toujours frais) ==========
-  const selectedDateISO = dateToISO(selectedDate)
+  const selectedDateISO = toISODateOnly(selectedDate)
   const swrKey = selectedDateISO ? `/api/timeslots?restaurantSlug=${restaurantSlug}` : null
   
-  const fetcher = (url) => fetch(url, { cache: 'no-store' }).then(res => res.json())
+  const fetcher = (url) => fetch(url, { cache: 'no-store', next: { revalidate: 0 } }).then(res => res.json())
   
   const { data: apiData, error: apiError, isLoading, mutate } = useSWR(
     swrKey,
@@ -144,19 +136,21 @@ export default function Home() {
     
     console.log('[Timeslots] Raw API data:', apiData)
     
-    // Filtrer pour la date sélectionnée
+    // Filtrer pour la date sélectionnée en comparant date_iso (string ISO)
     const slotsForDate = apiData.slots.filter(slot => {
-      if (!slot.start_at) return false
-      const slotDate = slot.start_at.split('T')[0]
-      return slotDate === selectedDateISO
+      // Comparaison stricte string ISO
+      return slot.date_iso === selectedDateISO && slot.is_open !== false
     })
     
     // Mapper au format UI
     const formatted = slotsForDate.map(slot => ({
-      time: slot.time || slot.start_at?.split('T')[1]?.substring(0, 5) || 'N/A',
+      time: slot.time_24h || slot.time || 'N/A',
       capacityLeft: slot.remaining_capacity ?? slot.capacity ?? 0,
       isBookable: (slot.remaining_capacity ?? slot.capacity ?? 0) > 0
     })).filter(s => s.time !== 'N/A')
+    
+    // Trier par heure
+    formatted.sort((a, b) => a.time.localeCompare(b.time))
     
     console.log('[Timeslots] Slots for', selectedDateISO, ':', formatted)
     

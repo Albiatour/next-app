@@ -8,6 +8,44 @@ const VIEW_MAP = {
   sarrasin: 'v_timeslots_sarrasin'
 }
 
+/**
+ * Fetch tous les records d'Airtable avec pagination complète
+ */
+async function fetchAllAirtableRecords({ baseUrl, view, filterByFormula, token }) {
+  const allRecords = []
+  let offset = undefined
+
+  do {
+    const params = new URLSearchParams({
+      pageSize: '100',
+      ...(view && { view }),
+      ...(offset && { offset }),
+      ...(filterByFormula && { filterByFormula })
+    })
+
+    const url = `${baseUrl}?${params.toString()}`
+    
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '')
+      throw new Error(`Airtable error ${response.status}: ${errorText}`)
+    }
+
+    const data = await response.json()
+    allRecords.push(...(data.records || []))
+    offset = data.offset // undefined si pas de page suivante
+    
+    console.log('[fetchAllAirtableRecords] Fetched page, records:', data.records?.length || 0, 'offset:', offset)
+  } while (offset)
+
+  return allRecords
+}
+
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url)
@@ -53,52 +91,77 @@ export async function GET(req) {
       )
     }
 
-    // Fetch from Airtable using the mapped view
-    const url = new URL(`https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(AT_TABLE)}`)
-    url.searchParams.set('view', viewName)
-    url.searchParams.set('pageSize', '100')
+    // Filtrer par restaurant_slug avec formula Airtable
+    const filterByFormula = `{restaurant_slug}='${restaurantSlug}'`
+    const baseUrl = `https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(AT_TABLE)}`
 
-    const response = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${AT_TOKEN}` },
-      cache: 'no-store'
+    // Fetch ALL records avec pagination
+    const records = await fetchAllAirtableRecords({
+      baseUrl,
+      view: viewName,
+      filterByFormula,
+      token: AT_TOKEN
     })
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '')
-      console.error('[timeslots] Airtable error:', response.status, errorText)
-      return Response.json(
-        { status: 'error', code: 'AIRTABLE_ERROR', message: `Airtable returned ${response.status}` },
-        { 
-          status: 500,
-          headers: { 'Cache-Control': 'no-store' }
-        }
-      )
-    }
+    console.log('[timeslots] Total records fetched:', records.length, 'for', restaurantSlug)
 
-    const data = await response.json()
-    let slots = (data.records || []).map(record => ({
-      id: record.id,
-      start_at: record.fields.start_at || record.fields.date_iso || null,
-      end_at: record.fields.end_at || null,
-      capacity: record.fields.capacity_total || record.fields.capacity || null,
-      remaining_capacity: record.fields.remaining_capacity ?? null,
-      time: record.fields.time_24h || null
-    }))
+    // Normaliser les slots
+    let slots = records.map(record => {
+      const fields = record.fields || {}
+      
+      // Extraire date_iso (priorité: date_iso > start_at extraction)
+      let dateISO = fields.date_iso || null
+      if (!dateISO && fields.start_at) {
+        // Extraire YYYY-MM-DD depuis start_at
+        dateISO = fields.start_at.split('T')[0]
+      }
+      
+      return {
+        id: record.id,
+        date_iso: dateISO,
+        time_24h: fields.time_24h || null,
+        start_at: fields.start_at || null,
+        end_at: fields.end_at || null,
+        is_open: fields.is_open ?? true,
+        capacity: fields.capacity_total || fields.capacity || 0,
+        remaining_capacity: fields.remaining_capacity ?? fields.capacity_total ?? fields.capacity ?? 0,
+        restaurant_slug: fields.restaurant_slug || restaurantSlug,
+        time: fields.time_24h || null
+      }
+    })
 
-    // Optional: filter by from/to dates in code
+    // Filtrer les slots sans date_iso valide
+    slots = slots.filter(s => s.date_iso)
+
+    // Filtrer par from/to si fournis
     if (from || to) {
       slots = slots.filter(slot => {
-        const startAt = slot.start_at
-        if (!startAt) return false
+        const dateISO = slot.date_iso
+        if (!dateISO) return false
         
-        if (from && startAt < from) return false
-        if (to && startAt >= to) return false
+        if (from && dateISO < from) return false
+        if (to && dateISO >= to) return false
         
         return true
       })
     }
 
-    console.log('[timeslots]', { restaurantSlug, view: viewName, count: slots.length, from, to })
+    // Trier par date puis heure
+    slots.sort((a, b) => {
+      if (a.date_iso !== b.date_iso) {
+        return a.date_iso.localeCompare(b.date_iso)
+      }
+      return (a.time_24h || '').localeCompare(b.time_24h || '')
+    })
+
+    console.log('[timeslots] Filtered & sorted:', {
+      restaurantSlug,
+      view: viewName,
+      count: slots.length,
+      from,
+      to,
+      sample: slots.slice(0, 3).map(s => ({ date: s.date_iso, time: s.time_24h, cap: s.remaining_capacity }))
+    })
 
     return Response.json(
       { 
