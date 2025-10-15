@@ -64,6 +64,16 @@ function formatLongFrenchDate(date) {
   }).format(d)
 }
 
+// Convertit une couleur hex en RGB (ex: "#7F4F24" -> "127 79 36")
+function hexToRgb(hex) {
+  if (!hex) return '5 150 105' // emerald-600 par défaut
+  const cleaned = hex.replace('#', '')
+  const r = parseInt(cleaned.substring(0, 2), 16)
+  const g = parseInt(cleaned.substring(2, 4), 16)
+  const b = parseInt(cleaned.substring(4, 6), 16)
+  return `${r} ${g} ${b}`
+}
+
 export default function Home() {
   const router = useRouter()
   const bookingRef = useRef(null)
@@ -77,6 +87,17 @@ export default function Home() {
   }, [restaurantSlug])
   
   const ctaLabel = `Réserver une table chez ${displayName}`
+  
+  // ========== BRAND COLOR : Couleur personnalisée du restaurant ==========
+  const brandHex = process.env.NEXT_PUBLIC_BRAND_HEX || '#059669' // emerald-600 par défaut
+  const brandRgb = useMemo(() => hexToRgb(brandHex), [brandHex])
+  
+  // Appliquer la variable CSS --brand au document
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--brand', brandRgb)
+    }
+  }, [brandRgb])
 
   // ========== STATES : Formulaire et réservation ==========
   // Note: selectedDate stocke maintenant un objet Date (pas une string EU)
@@ -312,9 +333,9 @@ export default function Home() {
         {/* ========== ÉCRAN DE CONFIRMATION (affiché après booking réussi) ========== */}
         {confirmation && (
           <section className="mb-8">
-            <div className="rounded-2xl border border-emerald-300 bg-white p-6 md:p-8 shadow-lg">
+            <div className="rounded-2xl border border-[rgb(var(--brand))] bg-white p-6 md:p-8 shadow-lg">
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[rgb(var(--brand))]/10 mb-4">
                   <span className="text-3xl">✅</span>
                 </div>
                 <h2 className="text-2xl font-bold text-zinc-800 mb-2">Réservation confirmée !</h2>
@@ -323,7 +344,7 @@ export default function Home() {
                   Votre réservation a bien été enregistrée. Vous recevrez une confirmation par email.
                 </p>
                 {confirmation.bookingCode && (
-                  <p className="text-lg font-mono font-bold text-emerald-600 mt-2">
+                  <p className="text-lg font-mono font-bold text-[rgb(var(--brand))] mt-2">
                     {confirmation.bookingCode}
                   </p>
                 )}
@@ -353,7 +374,7 @@ export default function Home() {
 
               <button
                 onClick={handleNewReservation}
-                className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="w-full rounded-xl bg-[rgb(var(--brand))] px-4 py-3 text-white font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50"
               >
                 Nouvelle réservation
               </button>
@@ -370,7 +391,7 @@ export default function Home() {
             onClick={handleScrollToBooking}
             aria-label={ctaLabel}
             title={ctaLabel}
-            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-balance whitespace-normal text-center"
+            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-[rgb(var(--brand))] px-6 py-3 text-white font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50 text-balance whitespace-normal text-center"
           >
             {ctaLabel}
           </button>
@@ -423,7 +444,7 @@ export default function Home() {
                           title={tooltipText}
                           className={`w-full rounded-full border px-3 py-2 text-sm shadow-sm transition ${
                             isSelected 
-                              ? 'bg-white border-emerald-500 ring-2 ring-emerald-500 text-zinc-800' 
+                              ? 'bg-white border-[rgb(var(--brand))] ring-2 ring-[rgb(var(--brand))] text-zinc-800' 
                               : isDisabled
                                 ? 'border-zinc-200 bg-zinc-100 text-zinc-400 cursor-not-allowed'
                                 : 'border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300'
@@ -453,8 +474,8 @@ export default function Home() {
             
             {/* ========== MESSAGE D'AIDE : Créneau sélectionné ========== */}
             {selectedTime && (
-              <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2.5">
-                <p className="text-sm text-emerald-800">
+              <div className="rounded-lg bg-[rgb(var(--brand))]/10 border border-[rgb(var(--brand))]/30 px-4 py-2.5">
+                <p className="text-sm text-[rgb(var(--brand))]">
                   Créneau choisi : <strong>{formatTimeLabel(selectedTime)}</strong> le {formatLongFrenchDate(selectedDate)}.
                 </p>
               </div>
@@ -526,7 +547,7 @@ export default function Home() {
                   type="button"
                   onClick={handleConfirmReservation}
                   disabled={confirming}
-                  className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl bg-[rgb(var(--brand))] px-4 py-3 text-white font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {confirming ? 'Confirmation en cours...' : 'Confirmer ma réservation'}
                 </button>
@@ -545,7 +566,7 @@ export default function Home() {
           <section className="mb-8">
             <div className={`rounded-xl border px-4 py-3 shadow-sm ${
               message.type === 'success' 
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                ? 'bg-[rgb(var(--brand))]/10 border-[rgb(var(--brand))]/30 text-[rgb(var(--brand))]' 
                 : 'bg-red-50 border-red-200 text-red-800'
             }`}>
               <p className="text-sm font-medium">{message.text}</p>
@@ -643,7 +664,7 @@ function DaysScroller({ selected, onSelect, totalDays = 60 }) {
                 onClick={() => onSelect(new Date(d))}
                 role="option"
                 aria-selected={active}
-                className={`min-w-[70px] snap-start rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center shadow-sm flex flex-col items-center gap-0.5 ${active ? 'ring-2 ring-emerald-300 border-emerald-300' : ''}`}
+                className={`min-w-[70px] snap-start rounded-xl border border-zinc-200 bg-white px-3 py-2 text-center shadow-sm flex flex-col items-center gap-0.5 ${active ? 'ring-2 ring-[rgb(var(--brand))] border-[rgb(var(--brand))]' : ''}`}
               >
                 <div className="text-[11px] leading-4 text-zinc-500">{shortDay(d)}</div>
                 <div className="text-lg font-bold leading-5 text-zinc-800">{d.getDate()}</div>
