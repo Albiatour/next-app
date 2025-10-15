@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { InputField, TextareaField } from '../components/InputField.jsx'
+import { hexToRGB, isDark, getTextColor } from '../lib/color'
 
 // ========== HELPERS : Conversion de dates ==========
 // Convertit un objet Date en format européen DD/MM/YYYY
@@ -64,37 +65,51 @@ function formatLongFrenchDate(date) {
   }).format(d)
 }
 
-// Convertit une couleur hex en RGB (ex: "#7F4F24" -> "127 79 36")
-function hexToRgb(hex) {
-  if (!hex) return '5 150 105' // emerald-600 par défaut
-  const cleaned = hex.replace('#', '')
-  const r = parseInt(cleaned.substring(0, 2), 16)
-  const g = parseInt(cleaned.substring(2, 4), 16)
-  const b = parseInt(cleaned.substring(4, 6), 16)
-  return `${r} ${g} ${b}`
-}
-
 export default function Home() {
   const router = useRouter()
   const bookingRef = useRef(null)
 
-  // ========== RESTAURANT INFO : Pour l'affichage UI uniquement ==========
+  // ========== RESTAURANT INFO : Données depuis Airtable ==========
   const restaurantSlug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG || 'bistro'
-  const displayName = useMemo(() => {
-    // restaurant?.display_name ou restaurant?.name seraient ici si disponibles
-    // Pour l'instant, on capitalise juste le slug
-    return restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1)
+  const [restaurant, setRestaurant] = useState(null)
+  
+  // Charger les données restaurant (brand_hex, display_name, etc.)
+  useEffect(() => {
+    // TODO: Remplacer par un vrai fetch depuis /api/restaurant?slug=${restaurantSlug}
+    // Pour l'instant, mock basé sur le slug
+    const mockRestaurants = {
+      sarrasin: { slug: 'sarrasin', display_name: 'Sarrasin', brand_hex: '#7F4F24' },
+      bistro: { slug: 'bistro', display_name: 'Bistro', brand_hex: '#3B82F6' }
+    }
+    setRestaurant(mockRestaurants[restaurantSlug] || { slug: restaurantSlug, display_name: restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1), brand_hex: '#059669' })
   }, [restaurantSlug])
+  
+  const displayName = useMemo(() => {
+    return restaurant?.display_name?.trim() 
+      || restaurant?.name?.trim() 
+      || (restaurantSlug ? restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1) : 'le restaurant')
+  }, [restaurant, restaurantSlug])
   
   const ctaLabel = `Réserver une table chez ${displayName}`
   
-  // ========== BRAND COLOR : Couleur personnalisée du restaurant ==========
-  const brandHex = process.env.NEXT_PUBLIC_BRAND_HEX || '#059669' // emerald-600 par défaut
-  const brandRgb = useMemo(() => hexToRgb(brandHex), [brandHex])
+  // ========== BRAND COLOR : Couleur personnalisée depuis Airtable ==========
+  const brandHex = restaurant?.brand_hex?.trim()
+  const brandRgb = useMemo(() => {
+    if (!brandHex || !/^#([0-9a-fA-F]{6})$/.test(brandHex)) {
+      console.warn('brand_hex manquant/invalide pour', restaurant?.slug)
+      return '5 150 105' // emerald-600 par défaut
+    }
+    return hexToRGB(brandHex)
+  }, [brandHex, restaurant?.slug])
+  
+  const textColor = useMemo(() => {
+    if (!brandHex) return 'text-white'
+    return getTextColor(brandHex)
+  }, [brandHex])
   
   // Appliquer la variable CSS --brand au document
   useEffect(() => {
-    if (typeof document !== 'undefined') {
+    if (typeof document !== 'undefined' && brandRgb) {
       document.documentElement.style.setProperty('--brand', brandRgb)
     }
   }, [brandRgb])
@@ -374,7 +389,7 @@ export default function Home() {
 
               <button
                 onClick={handleNewReservation}
-                className="w-full rounded-xl bg-[rgb(var(--brand))] px-4 py-3 text-white font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50"
+                className={`w-full rounded-xl bg-[rgb(var(--brand))] px-4 py-3 ${textColor} font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50`}
               >
                 Nouvelle réservation
               </button>
@@ -391,7 +406,7 @@ export default function Home() {
             onClick={handleScrollToBooking}
             aria-label={ctaLabel}
             title={ctaLabel}
-            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-[rgb(var(--brand))] px-6 py-3 text-white font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50 text-balance whitespace-normal text-center"
+            className={`w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-[rgb(var(--brand))] px-6 py-3 ${textColor} font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50 text-balance whitespace-normal text-center`}
           >
             {ctaLabel}
           </button>
@@ -547,7 +562,7 @@ export default function Home() {
                   type="button"
                   onClick={handleConfirmReservation}
                   disabled={confirming}
-                  className="w-full rounded-xl bg-[rgb(var(--brand))] px-4 py-3 text-white font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full rounded-xl bg-[rgb(var(--brand))] px-4 py-3 ${textColor} font-medium shadow-md hover:bg-[rgb(var(--brand))]/90 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--brand))]/50 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {confirming ? 'Confirmation en cours...' : 'Confirmer ma réservation'}
                 </button>
