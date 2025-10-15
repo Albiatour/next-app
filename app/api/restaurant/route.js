@@ -54,11 +54,11 @@ export async function GET(req) {
     const restaurant = mockRestaurants[slug]
 
     if (!restaurant) {
-      // Fallback par défaut
+      // Fallback par défaut (pas de couleur)
       return Response.json({
         slug: slug,
         display_name: slug.charAt(0).toUpperCase() + slug.slice(1),
-        brand_hex: '#059669' // emerald-600 par défaut
+        brand_hex: null
       })
     }
 
