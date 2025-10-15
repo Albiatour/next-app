@@ -81,6 +81,7 @@ export async function GET(req) {
       start_at: record.fields.start_at || record.fields.date_iso || null,
       end_at: record.fields.end_at || null,
       capacity: record.fields.capacity_total || record.fields.capacity || null,
+      remaining_capacity: record.fields.remaining_capacity ?? null,
       time: record.fields.time_24h || null
     }))
 

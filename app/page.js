@@ -152,8 +152,8 @@ export default function Home() {
     // Mapper au format UI
     const formatted = slotsForDate.map(slot => ({
       time: slot.time || slot.start_at?.split('T')[1]?.substring(0, 5) || 'N/A',
-      capacityLeft: slot.capacity || 0,
-      isBookable: (slot.capacity || 0) > 0
+      capacityLeft: slot.remaining_capacity ?? slot.capacity ?? 0,
+      isBookable: (slot.remaining_capacity ?? slot.capacity ?? 0) > 0
     })).filter(s => s.time !== 'N/A')
     
     console.log('[Timeslots] Slots for', selectedDateISO, ':', formatted)
@@ -458,19 +458,27 @@ export default function Home() {
                     {availableSlots.map((s) => {
                       // ========== ÉTAPE 1 : Sélection du créneau (pas de réservation immédiate) ==========
                       // s.time = créneau (ex: "12:00")
-                      // s.isBookable = true/false
+                      // s.isBookable = true/false (base)
                       // s.capacityLeft = nombre de places restantes
+                      
+                      // Nombre de couverts sélectionnés
+                      const selectedCovers = parseInt(covers || '1', 10)
+                      
+                      // Vérification de disponibilité basée sur le nombre de couverts
+                      const remainingCapacity = s.capacityLeft || 0
+                      const isDisabled = remainingCapacity <= 0 || remainingCapacity < selectedCovers
                       const isSelected = selectedTime === s.time
-                      const isDisabled = !s.isBookable
-                      const tooltipText = s.isBookable 
-                        ? `${s.capacityLeft || 0} place${(s.capacityLeft || 0) > 1 ? 's' : ''} restante${(s.capacityLeft || 0) > 1 ? 's' : ''}`
-                        : 'Complet'
+                      
+                      // Label et tooltip
+                      const tooltipText = isDisabled
+                        ? 'Complet'
+                        : `${remainingCapacity} place${remainingCapacity > 1 ? 's' : ''} restante${remainingCapacity > 1 ? 's' : ''}`
                       
                       return (
                         <button
                           key={s.time}
                           type="button"
-                          onClick={() => s.isBookable ? setSelectedTime(s.time) : null}
+                          onClick={() => !isDisabled ? setSelectedTime(s.time) : null}
                           disabled={isDisabled}
                           title={tooltipText}
                           className={`w-full rounded-full border px-3 py-2 text-sm shadow-sm transition ${
@@ -483,7 +491,7 @@ export default function Home() {
                         >
                           <div className="flex flex-col items-center">
                             <span>{s.time}</span>
-                            {!s.isBookable && (
+                            {isDisabled && (
                               <span className="text-[10px] text-red-500">• complet</span>
                             )}
                           </div>
