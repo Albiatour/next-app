@@ -68,6 +68,16 @@ export default function Home() {
   const router = useRouter()
   const bookingRef = useRef(null)
 
+  // ========== RESTAURANT INFO : Pour l'affichage UI uniquement ==========
+  const restaurantSlug = process.env.NEXT_PUBLIC_RESTAURANT_SLUG || 'bistro'
+  const displayName = useMemo(() => {
+    // restaurant?.display_name ou restaurant?.name seraient ici si disponibles
+    // Pour l'instant, on capitalise juste le slug
+    return restaurantSlug.charAt(0).toUpperCase() + restaurantSlug.slice(1)
+  }, [restaurantSlug])
+  
+  const ctaLabel = `Réserver une table chez ${displayName}`
+
   // ========== STATES : Formulaire et réservation ==========
   // Note: selectedDate stocke maintenant un objet Date (pas une string EU)
   const [selectedDate, setSelectedDate] = useState(null)
@@ -356,13 +366,13 @@ export default function Home() {
           <>
         {/* HERO */}
         <section className="text-center mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-zinc-800 mb-2">Réservations IA pour restaurants</h1>
-          <p className="text-sm text-zinc-500 mb-6">Prototype Next.js + Vercel — by Alexandre</p>
           <button
             onClick={handleScrollToBooking}
-            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+            aria-label={ctaLabel}
+            title={ctaLabel}
+            className="w-full md:w-auto inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-white font-medium shadow-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-balance whitespace-normal text-center"
           >
-            Réserver
+            {ctaLabel}
           </button>
         </section>
 
