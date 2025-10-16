@@ -161,6 +161,10 @@ export async function POST(req) {
     }
 
     const body = await req.json().catch(() => ({}));
+    
+    // === PATCH DEBUG SERVICE MODE ===
+    console.log('DEBUG_BOOKING_BODY', body);
+    
     // Ignore any client-sent restaurant slug (do NOT read restaurant_slug_raw from request)
     // Always set restaurant from ENV
     const restaurant = RESTAURANT_SLUG;
@@ -188,6 +192,15 @@ export async function POST(req) {
 
     // SERVICE_MODE: build service_key + debug logs
     const { restaurant_ref, restaurant: bodyRestaurant, restaurant_slug, restaurant_name, date_iso, time_24h } = body;
+    
+    // === PATCH DEBUG SERVICE MODE ===
+    console.log('DEBUG_SERVICE_SEARCH', {
+      restaurant_ref,
+      restaurant_name,
+      date_iso,
+      time_24h
+    });
+    
     const d = normDate(date_iso || dateISO);
     const type = getServiceType(time_24h || time);
     const resolved = await resolveRestaurant(restaurant_ref || bodyRestaurant || restaurant_slug || restaurant_name || restaurant);
@@ -209,9 +222,12 @@ export async function POST(req) {
     
     try {
       // Lookup 1: by service_key_lower
-      let data = await airtableList(T_SERVICES, { 
-        filterByFormula: `{service_key_lower} = "${keyLower}"` 
-      });
+      const filterByFormula = `{service_key_lower} = "${keyLower}"`;
+      
+      // === PATCH DEBUG SERVICE MODE ===
+      console.log('DEBUG_AIRTABLE_QUERY', filterByFormula);
+      
+      let data = await airtableList(T_SERVICES, { filterByFormula });
       services = data.records || [];
       
       // Fallback: by record_id + date + type
@@ -223,15 +239,28 @@ export async function POST(req) {
       }
       
       if (!services?.length) {
-        return Response.json({ code: 'SERVICE_NOT_FOUND', keyLower }, { status: 422 });
+        return Response.json({ 
+          code: 'SERVICE_NOT_FOUND', 
+          message: 'Aucun service correspondant trouvé',
+          keyLower 
+        }, { status: 422 });
       }
       if (services.length > 1) {
-        return Response.json({ code: 'SERVICE_DUPLICATE', keyLower, count: services.length }, { status: 422 });
+        return Response.json({ 
+          code: 'SERVICE_DUPLICATE', 
+          message: 'Plusieurs services trouvés (problème de configuration)',
+          keyLower, 
+          count: services.length 
+        }, { status: 422 });
       }
       
       const service = services[0];
       if (!!service.fields?.is_full) {
-        return Response.json({ code: 'SERVICE_FULL', keyLower }, { status: 422 });
+        return Response.json({ 
+          code: 'SERVICE_FULL', 
+          message: 'Le service est complet',
+          keyLower 
+        }, { status: 422 });
       }
       
       serviceRecordId = service.id;
@@ -284,6 +313,9 @@ export async function POST(req) {
       if (serviceRecordId) {
         bookingFields.services_ref = [serviceRecordId];
       }
+
+      // === PATCH DEBUG SERVICE MODE ===
+      console.log('DEBUG_FINAL_PAYLOAD', bookingFields);
 
       created = await airtableCreate(T_BOOKS, bookingFields);
     } catch (e) {
