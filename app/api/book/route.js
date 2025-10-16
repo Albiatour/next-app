@@ -2,21 +2,22 @@ import { randomUUID } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-// ---------- SERVICE_MODE: Utilitaires service ----------
-function getServiceType(time24h) {
-  const h = parseInt((time24h || '').split(':')[0] || '0', 10);
-  return h < 17 ? 'midi' : 'soir';
+// SERVICE_MODE: Utilitaires service (locaux, pas d'import)
+
+function getServiceType(t) { 
+  const h = parseInt((t || '').split(':')[0] || '0', 10); 
+  return h < 17 ? 'midi' : 'soir'; 
 }
 
-function normalizeYYYYMMDD(dateISO) {
-  return (dateISO || '').split('T')[0];
+function normDate(d) { 
+  return (d || '').split('T')[0]; 
 }
 
-function cleanKeyPart(s) {
-  return String(s || '').replace(/\s+/g, ' ').trim();
+function clean(s) { 
+  return String(s || '').replace(/\s+/g, ' ').trim(); 
 }
 
-async function resolveRestaurantKey(maybeIdOrName) {
+async function resolveRestaurant(maybeIdOrName) {
   // SERVICE_MODE: si c'est un recordId Airtable, fetch le nom
   if (/^rec[a-zA-Z0-9]{14}$/.test(maybeIdOrName || '')) {
     try {
@@ -27,20 +28,18 @@ async function resolveRestaurantKey(maybeIdOrName) {
       );
       if (res.ok) {
         const rec = await res.json();
-        // ADAPTER le champ ci-dessous au champ réel utilisé dans Services_API.service_key
         const name = rec?.fields?.name || rec?.fields?.restaurant_name || rec?.fields?.slug || maybeIdOrName;
-        return { displayName: cleanKeyPart(name), recordId: rec?.id || maybeIdOrName };
+        return { name: clean(name), id: rec?.id || null };
       }
     } catch {
-      return { displayName: cleanKeyPart(maybeIdOrName), recordId: maybeIdOrName };
+      return { name: clean(maybeIdOrName), id: maybeIdOrName };
     }
   }
-  return { displayName: cleanKeyPart(maybeIdOrName), recordId: null };
+  return { name: clean(maybeIdOrName), id: null };
 }
 
-function makeServiceKey(restaurantKey, dateYYYYMMDD, serviceType) {
-  // SERVICE_MODE: respecter exactement le format "Nom | YYYY-MM-DD | midi/soir"
-  return `${cleanKeyPart(restaurantKey)} | ${dateYYYYMMDD} | ${serviceType}`;
+function makeKeyLower(name, dateYYYYMMDD, type) { 
+  return (clean(name) + ' | ' + dateYYYYMMDD + ' | ' + type).toLowerCase(); 
 }
 
 // Read mono-restaurant slug from env
@@ -189,64 +188,54 @@ export async function POST(req) {
 
     // SERVICE_MODE: build service_key + debug logs
     const { restaurant_ref, restaurant: bodyRestaurant, restaurant_slug, restaurant_name, date_iso, time_24h } = body;
-    const serviceType = getServiceType(time_24h || time);
-    const d = normalizeYYYYMMDD(date_iso || dateISO);
-    const rawKey = restaurant_ref || bodyRestaurant || restaurant_slug || restaurant_name || restaurant;
-    const resolved = await resolveRestaurantKey(rawKey);
-    const serviceKey = makeServiceKey(resolved.displayName, d, serviceType);
+    const d = normDate(date_iso || dateISO);
+    const type = getServiceType(time_24h || time);
+    const resolved = await resolveRestaurant(restaurant_ref || bodyRestaurant || restaurant_slug || restaurant_name || restaurant);
+    const keyLower = makeKeyLower(resolved.name, d, type);
     
-    // SERVICE_MODE_DIAG
     console.log('SERVICE_MODE_DEBUG', { 
-      serviceKey, 
+      raw: restaurant_ref || bodyRestaurant || restaurant_slug || restaurant_name, 
+      name: resolved.name, 
+      id: resolved.id, 
       date: d, 
-      serviceType, 
-      restaurantKeyRaw: rawKey, 
-      restaurantKey: resolved.displayName, 
-      lookup: 'by_service_key' 
+      type, 
+      keyLower 
     });
     
     // SERVICE_MODE: Lookup dans Services_API
     const T_SERVICES = process.env.AIRTABLE_TABLE_SERVICES || 'Services_API';
-    let serviceFormula = `{service_key} = "${serviceKey}"`;
     let serviceRecordId = null;
     let services = [];
     
     try {
-      // Premier lookup par service_key
-      let data = await airtableList(T_SERVICES, { filterByFormula: serviceFormula });
+      // Lookup 1: by service_key_lower
+      let data = await airtableList(T_SERVICES, { 
+        filterByFormula: `{service_key_lower} = "${keyLower}"` 
+      });
       services = data.records || [];
       
-      // SERVICE_MODE: Fallback robuste si 0 résultat
-      if (!services.length) {
-        const rid = resolved.recordId || rawKey;
-        if (rid) {
-          const fallbackFormula = `AND({date_iso}='${d}', {service_type}='${serviceType}', {restaurant_record_id}='${rid}')`;
-          
-          // SERVICE_MODE_DIAG
-          console.log('SERVICE_MODE_DEBUG_FALLBACK', { formula: fallbackFormula });
-          
-          data = await airtableList(T_SERVICES, { filterByFormula: fallbackFormula });
-          services = data.records || [];
-        }
+      // Fallback: by record_id + date + type
+      if (!services.length && resolved.id) {
+        const ff = `AND({restaurant_record_id}='${resolved.id}', {date_iso}='${d}', {service_type}='${type}')`;
+        console.log('SERVICE_MODE_FALLBACK', ff);
+        data = await airtableList(T_SERVICES, { filterByFormula: ff });
+        services = data.records || [];
       }
       
       if (!services?.length) {
-        console.warn('SERVICE_NOT_FOUND', { serviceKey });
-        return Response.json({ code: 'SERVICE_NOT_FOUND', serviceKey }, { status: 422 });
+        return Response.json({ code: 'SERVICE_NOT_FOUND', keyLower }, { status: 422 });
       }
       if (services.length > 1) {
-        console.warn('SERVICE_DUPLICATE', { serviceKey, count: services.length });
-        return Response.json({ code: 'SERVICE_DUPLICATE', serviceKey }, { status: 422 });
+        return Response.json({ code: 'SERVICE_DUPLICATE', keyLower, count: services.length }, { status: 422 });
       }
       
       const service = services[0];
-      const isFull = !!service?.fields?.is_full;
-      if (isFull) {
-        return Response.json({ code: 'SERVICE_FULL', serviceKey }, { status: 422 });
+      if (!!service.fields?.is_full) {
+        return Response.json({ code: 'SERVICE_FULL', keyLower }, { status: 422 });
       }
       
       serviceRecordId = service.id;
-      console.log('SERVICE_MODE_LINK', { serviceKey, serviceId: service.id });
+      console.log('SERVICE_MODE_LINK', { serviceId: service.id, keyLower });
     } catch (err) {
       console.error('[SERVICE_MODE] Error checking service:', err);
       return Response.json({ status: 'error', code: 'SERVICE_ERROR', message: err.message }, { status: 500 });

@@ -2,22 +2,22 @@
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// Réutiliser les mêmes utilitaires que dans /api/book
-function getServiceType(time24h) {
-  const h = parseInt((time24h || '').split(':')[0] || '0', 10);
-  return h < 17 ? 'midi' : 'soir';
+// SERVICE_MODE: Réutiliser les mêmes utilitaires que dans /api/book
+function getServiceType(t) { 
+  const h = parseInt((t || '').split(':')[0] || '0', 10); 
+  return h < 17 ? 'midi' : 'soir'; 
 }
 
-function normalizeYYYYMMDD(dateISO) {
-  return (dateISO || '').split('T')[0];
+function normDate(d) { 
+  return (d || '').split('T')[0]; 
 }
 
-function cleanKeyPart(s) {
-  return String(s || '').replace(/\s+/g, ' ').trim();
+function clean(s) { 
+  return String(s || '').replace(/\s+/g, ' ').trim(); 
 }
 
-async function resolveRestaurantKey(maybeIdOrName, atToken, atBase) {
-  // Si c'est un recordId Airtable, fetch le nom
+async function resolveRestaurant(maybeIdOrName, atToken, atBase) {
+  // SERVICE_MODE: si c'est un recordId Airtable, fetch le nom
   if (/^rec[a-zA-Z0-9]{14}$/.test(maybeIdOrName || '')) {
     try {
       const T_RESTAURANTS = process.env.AIRTABLE_TABLE_RESTAURANTS || 'Restaurants_API';
@@ -28,17 +28,17 @@ async function resolveRestaurantKey(maybeIdOrName, atToken, atBase) {
       if (res.ok) {
         const rec = await res.json();
         const name = rec?.fields?.name || rec?.fields?.restaurant_name || rec?.fields?.slug || maybeIdOrName;
-        return { displayName: cleanKeyPart(name), recordId: rec?.id || maybeIdOrName };
+        return { name: clean(name), id: rec?.id || null };
       }
     } catch {
-      return { displayName: cleanKeyPart(maybeIdOrName), recordId: maybeIdOrName };
+      return { name: clean(maybeIdOrName), id: maybeIdOrName };
     }
   }
-  return { displayName: cleanKeyPart(maybeIdOrName), recordId: null };
+  return { name: clean(maybeIdOrName), id: null };
 }
 
-function makeServiceKey(restaurantDisplay, dateYYYYMMDD, serviceType) {
-  return `${cleanKeyPart(restaurantDisplay)} | ${dateYYYYMMDD} | ${serviceType}`;
+function makeKeyLower(name, dateYYYYMMDD, type) { 
+  return (clean(name) + ' | ' + dateYYYYMMDD + ' | ' + type).toLowerCase(); 
 }
 
 async function airtableList(table, params, atToken, atBase) {
@@ -80,12 +80,12 @@ export async function GET(req) {
 
     // SERVICE_MODE_DIAG: Calculer les paramètres
     const serviceType = getServiceType(time)
-    const d = normalizeYYYYMMDD(date)
-    const resolved = await resolveRestaurantKey(restaurant, AT_TOKEN, AT_BASE)
-    const serviceKey = makeServiceKey(resolved.displayName, d, serviceType)
+    const d = normDate(date)
+    const resolved = await resolveRestaurant(restaurant, AT_TOKEN, AT_BASE)
+    const keyLower = makeKeyLower(resolved.name, d, serviceType)
 
-    // SERVICE_MODE_DIAG: Lookup 1 - Par service_key exact
-    const byKeyFormula = `{service_key} = "${serviceKey}"`
+    // SERVICE_MODE_DIAG: Lookup 1 - Par service_key_lower
+    const byKeyFormula = `{service_key_lower} = "${keyLower}"`
     let byKeyData
     let byKeyFound = false
     let byKeyCount = 0
@@ -101,8 +101,8 @@ export async function GET(req) {
     }
 
     // SERVICE_MODE_DIAG: Lookup 2 - Fallback par restaurant_record_id + date + service_type
-    const rid = resolved.recordId || restaurant
-    const fallbackFormula = `AND({date_iso}='${d}', {service_type}='${serviceType}', {restaurant_record_id}='${rid}')`
+    const rid = resolved.id || restaurant
+    const fallbackFormula = `AND({restaurant_record_id}='${rid}', {date_iso}='${d}', {service_type}='${serviceType}')`
     let byFallbackData
     let byFallbackUsed = !byKeyFound
     let byFallbackFound = false
@@ -123,8 +123,8 @@ export async function GET(req) {
     // SERVICE_MODE_DIAG: Résultat
     return Response.json({
       input: { restaurant, date, time, serviceType },
-      resolved: { displayName: resolved.displayName, recordId: resolved.recordId },
-      serviceKey,
+      resolved: { name: resolved.name, id: resolved.id },
+      keyLower,
       byKey: { 
         found: byKeyFound, 
         count: byKeyCount, 

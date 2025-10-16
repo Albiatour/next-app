@@ -3,7 +3,19 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 // SERVICE_MODE
-import { getServiceType, normalizeYYYYMMDD, makeServiceKey } from '@/lib/serviceKey'
+function getServiceType(t) { 
+  const h = parseInt((t || '').split(':')[0] || '0', 10); 
+  return h < 17 ? 'midi' : 'soir'; 
+}
+function normDate(d) { 
+  return (d || '').split('T')[0]; 
+}
+function clean(s) { 
+  return String(s || '').replace(/\s+/g, ' ').trim(); 
+}
+function makeKeyLower(name, dateYYYYMMDD, type) { 
+  return (clean(name) + ' | ' + dateYYYYMMDD + ' | ' + type).toLowerCase(); 
+}
 
 // Map restaurant slug to Airtable view
 const VIEW_MAP = {
@@ -172,13 +184,13 @@ export async function GET(req) {
       const T_SERVICES = process.env.AIRTABLE_TABLE_SERVICES || 'Services_API'
       const serviceKeys = []
       uniqueDates.forEach(d => {
-        const dateNorm = normalizeYYYYMMDD(d)
-        serviceKeys.push(makeServiceKey(restaurantSlug, dateNorm, "midi"))
-        serviceKeys.push(makeServiceKey(restaurantSlug, dateNorm, "soir"))
+        const dateNorm = normDate(d)
+        serviceKeys.push(makeKeyLower(restaurantSlug, dateNorm, 'midi'))
+        serviceKeys.push(makeKeyLower(restaurantSlug, dateNorm, 'soir'))
       })
       
       // SERVICE_MODE: Lookup unique avec OR()
-      const orCond = serviceKeys.map(k => `{service_key}='${k}'`).join(', ')
+      const orCond = serviceKeys.map(k => `{service_key_lower}="${k}"`).join(', ')
       const serviceFormula = serviceKeys.length === 1 ? orCond : `OR(${orCond})`
       
       try {
@@ -193,7 +205,7 @@ export async function GET(req) {
           const serviceData = await serviceRes.json()
           const serviceMap = {}
           (serviceData.records || []).forEach(rec => {
-            const sk = rec.fields?.service_key
+            const sk = rec.fields?.service_key_lower
             if (sk) {
               serviceMap[sk] = {
                 is_full: rec.fields.is_full ?? false,
@@ -206,8 +218,8 @@ export async function GET(req) {
           slots = slots.map(slot => {
             if (!slot.time_24h || !slot.date_iso) return slot
             const t = getServiceType(slot.time_24h)
-            const d = normalizeYYYYMMDD(slot.date_iso)
-            const k = makeServiceKey(restaurantSlug, d, t)
+            const d = normDate(slot.date_iso)
+            const k = makeKeyLower(restaurantSlug, d, t)
             if (serviceMap[k]) {
               return {
                 ...slot,
@@ -215,7 +227,7 @@ export async function GET(req) {
                 ...(serviceMap[k].remaining_capacity !== null && { remaining_capacity: serviceMap[k].remaining_capacity })
               }
             } else {
-              console.warn('[SERVICE_MODE] service_not_found', k)
+              console.warn('service_not_found_for_slot', k)
             }
             return slot
           })
