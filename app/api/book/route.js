@@ -29,13 +29,13 @@ async function resolveRestaurantKey(maybeIdOrName) {
         const rec = await res.json();
         // ADAPTER le champ ci-dessous au champ réel utilisé dans Services_API.service_key
         const name = rec?.fields?.name || rec?.fields?.restaurant_name || rec?.fields?.slug || maybeIdOrName;
-        return cleanKeyPart(name);
+        return { displayName: cleanKeyPart(name), recordId: rec?.id || maybeIdOrName };
       }
     } catch {
-      return cleanKeyPart(maybeIdOrName);
+      return { displayName: cleanKeyPart(maybeIdOrName), recordId: maybeIdOrName };
     }
   }
-  return cleanKeyPart(maybeIdOrName);
+  return { displayName: cleanKeyPart(maybeIdOrName), recordId: null };
 }
 
 function makeServiceKey(restaurantKey, dateYYYYMMDD, serviceType) {
@@ -191,29 +191,43 @@ export async function POST(req) {
     const { restaurant_ref, restaurant: bodyRestaurant, restaurant_slug, restaurant_name, date_iso, time_24h } = body;
     const serviceType = getServiceType(time_24h || time);
     const d = normalizeYYYYMMDD(date_iso || dateISO);
-    const restaurantKeyRaw = restaurant_ref || bodyRestaurant || restaurant_slug || restaurant_name || restaurant;
-    const restaurantKey = await resolveRestaurantKey(restaurantKeyRaw);
-    const serviceKey = makeServiceKey(restaurantKey, d, serviceType);
-    console.log('// SERVICE_MODE_DEBUG', { restaurantKeyRaw, restaurantKey, serviceType, date: d, serviceKey });
+    const rawKey = restaurant_ref || bodyRestaurant || restaurant_slug || restaurant_name || restaurant;
+    const resolved = await resolveRestaurantKey(rawKey);
+    const serviceKey = makeServiceKey(resolved.displayName, d, serviceType);
+    console.log('// SERVICE_MODE_DEBUG', { rawKey, displayName: resolved.displayName, recordId: resolved.recordId, serviceType, date: d, serviceKey });
     
     // SERVICE_MODE: Lookup dans Services_API
     const T_SERVICES = process.env.AIRTABLE_TABLE_SERVICES || 'Services_API';
-    const serviceFormula = `{service_key} = "${serviceKey}"`;
+    let serviceFormula = `{service_key} = "${serviceKey}"`;
     let serviceRecordId = null;
+    let services = [];
     
     try {
-      const { records = [] } = await airtableList(T_SERVICES, { filterByFormula: serviceFormula });
+      // Premier lookup par service_key
+      let data = await airtableList(T_SERVICES, { filterByFormula: serviceFormula });
+      services = data.records || [];
       
-      if (!records?.length) {
+      // SERVICE_MODE: Fallback robuste si 0 résultat
+      if (!services.length) {
+        const rid = resolved.recordId || rawKey;
+        if (rid) {
+          const fallbackFormula = `AND({date_iso}='${d}', {service_type}='${serviceType}', {restaurant_record_id}='${rid}')`;
+          console.log('// SERVICE_MODE_FALLBACK', { serviceKey, fallbackFormula });
+          data = await airtableList(T_SERVICES, { filterByFormula: fallbackFormula });
+          services = data.records || [];
+        }
+      }
+      
+      if (!services?.length) {
         console.warn('SERVICE_NOT_FOUND', { serviceKey });
         return Response.json({ code: 'SERVICE_NOT_FOUND', serviceKey }, { status: 422 });
       }
-      if (records.length > 1) {
-        console.warn('SERVICE_DUPLICATE', { serviceKey, count: records.length });
+      if (services.length > 1) {
+        console.warn('SERVICE_DUPLICATE', { serviceKey, count: services.length });
         return Response.json({ code: 'SERVICE_DUPLICATE', serviceKey }, { status: 422 });
       }
       
-      const service = records[0];
+      const service = services[0];
       const isFull = !!service?.fields?.is_full;
       if (isFull) {
         return Response.json({ code: 'SERVICE_FULL', serviceKey }, { status: 422 });
