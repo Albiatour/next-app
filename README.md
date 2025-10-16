@@ -1,3 +1,7 @@
+⚠️ **PROD = hotfix-stable (rollback du 1f6ab9c...) — ne pas merger sur main tant que le Service Mode n'est pas validé.**
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
