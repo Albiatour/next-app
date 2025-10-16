@@ -194,7 +194,16 @@ export async function POST(req) {
     const rawKey = restaurant_ref || bodyRestaurant || restaurant_slug || restaurant_name || restaurant;
     const resolved = await resolveRestaurantKey(rawKey);
     const serviceKey = makeServiceKey(resolved.displayName, d, serviceType);
-    console.log('// SERVICE_MODE_DEBUG', { rawKey, displayName: resolved.displayName, recordId: resolved.recordId, serviceType, date: d, serviceKey });
+    
+    // SERVICE_MODE_DIAG
+    console.log('SERVICE_MODE_DEBUG', { 
+      serviceKey, 
+      date: d, 
+      serviceType, 
+      restaurantKeyRaw: rawKey, 
+      restaurantKey: resolved.displayName, 
+      lookup: 'by_service_key' 
+    });
     
     // SERVICE_MODE: Lookup dans Services_API
     const T_SERVICES = process.env.AIRTABLE_TABLE_SERVICES || 'Services_API';
@@ -212,7 +221,10 @@ export async function POST(req) {
         const rid = resolved.recordId || rawKey;
         if (rid) {
           const fallbackFormula = `AND({date_iso}='${d}', {service_type}='${serviceType}', {restaurant_record_id}='${rid}')`;
-          console.log('// SERVICE_MODE_FALLBACK', { serviceKey, fallbackFormula });
+          
+          // SERVICE_MODE_DIAG
+          console.log('SERVICE_MODE_DEBUG_FALLBACK', { formula: fallbackFormula });
+          
           data = await airtableList(T_SERVICES, { filterByFormula: fallbackFormula });
           services = data.records || [];
         }
@@ -313,6 +325,9 @@ export async function POST(req) {
     }, { status: 200 });
 
   } catch (err) {
+    // SERVICE_MODE_DIAG
+    console.error('BOOKINGS_POST_ERROR', err);
+    
     const msg = String(err?.message || 'INTERNAL');
     let http = 500, code = 'INTERNAL';
     if (msg.includes('INVALID_DATE_FORMAT')) { http = 400; code = 'INVALID_DATE_FORMAT'; }
