@@ -191,23 +191,36 @@ export default function Home() {
         body: JSON.stringify(body)
       })
       
-      const data = await res.json()
-      
+      // BOOKING_ERROR_UI: Gestion des erreurs avec messages spécifiques
       if (!res.ok) {
-        // Gérer le cas "SLOT_FULL"
-        if (data.code === 'SLOT_FULL') {
-          setMessage({ type: 'error', text: 'Ce créneau est complet' })
-          await mutate() // Recharger pour voir les nouvelles dispo
-          return
+        let err = {}
+        try { 
+          err = await res.json() 
+        } catch {}
+        
+        const code = err?.code || 'UNKNOWN'
+        let msg = 'Erreur de réservation. Réessayez.'
+        
+        // BOOKING_ERROR_UI: Messages spécifiques par code d'erreur
+        if (code === 'SLOT_FULL') {
+          msg = 'Ce créneau est complet'
+        } else if (code === 'SLOT_NOT_FOUND' || code === 'INVALID_SLOT') {
+          msg = 'Ce créneau n\'est plus disponible'
+        } else if (code === 'SERVICE_NOT_FOUND') {
+          msg = 'Service introuvable pour cette date. Réessayez ou contactez le resto.'
+        } else if (code === 'SERVICE_FULL') {
+          msg = 'Le service est complet. Choisissez un autre horaire ou appelez le resto.'
+        } else if (code === 'SERVICE_DUPLICATE') {
+          msg = 'Plusieurs services correspondent. Contactez le resto.'
         }
-        // Gérer le cas où le créneau n'existe plus
-        if (data.code === 'SLOT_NOT_FOUND' || data.code === 'INVALID_SLOT') {
-          setMessage({ type: 'error', text: 'Ce créneau n\'est plus disponible' })
-          await mutate() // Recharger pour voir les nouvelles dispo
-          return
-        }
-        throw new Error(data.error || 'Erreur de réservation')
+        
+        console.warn('BOOKING_ERROR', res.status, err)
+        setMessage({ type: 'error', text: msg })
+        await mutate() // Recharger pour voir les nouvelles dispo
+        return
       }
+      
+      const data = await res.json()
       
       // Succès : Afficher l'écran de confirmation
       const bookingId = data.booking_id || data.bookingId || data.id || 'N/A'
