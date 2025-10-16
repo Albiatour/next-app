@@ -1,5 +1,8 @@
 import { randomUUID } from 'crypto';
 
+// SERVICE_MODE
+import { getServiceType, normalizeYYYYMMDD, makeServiceKey } from '@/lib/serviceKey'
+
 export const dynamic = 'force-dynamic';
 
 // Read mono-restaurant slug from env
@@ -146,6 +149,39 @@ export async function POST(req) {
       }, { status: 200 });
     }
 
+    // SERVICE_MODE: Vérifier disponibilité du service (midi/soir)
+    const serviceType = getServiceType(time);
+    const d = normalizeYYYYMMDD(dateISO);
+    const restaurantKey = restaurant;
+    const serviceKey = makeServiceKey(restaurantKey, d, serviceType);
+    
+    const T_SERVICES = process.env.AIRTABLE_TABLE_SERVICES || 'Services_API';
+    const serviceFormula = `{service_key}='${serviceKey}'`;
+    let serviceRecordId = null;
+    
+    try {
+      const { records = [] } = await airtableList(T_SERVICES, { filterByFormula: serviceFormula });
+      
+      if (records.length === 0) {
+        return Response.json({ status: 'error', code: 'SERVICE_NOT_FOUND', serviceKey }, { status: 422 });
+      }
+      if (records.length > 1) {
+        return Response.json({ status: 'error', code: 'SERVICE_DUPLICATE', serviceKey }, { status: 422 });
+      }
+      
+      const service = records[0];
+      serviceRecordId = service.id;
+      
+      if (service.fields?.is_full === true) {
+        return Response.json({ status: 'error', code: 'SERVICE_FULL', serviceKey }, { status: 422 });
+      }
+      
+      console.log('[SERVICE_MODE] SERVICE_MODE_LINK', { serviceKey, linked: true });
+    } catch (err) {
+      console.error('[SERVICE_MODE] Error checking service:', err);
+      return Response.json({ status: 'error', code: 'SERVICE_ERROR', message: err.message }, { status: 500 });
+    }
+
     // 2) Contrôle de capacité
     const slot = await getSlotRecord(restaurant, dateISO, time);
     if (!slot) {
@@ -184,6 +220,11 @@ export async function POST(req) {
         date_iso_raw: dateISO,               // from client
         time_24h_raw: time                   // from client
       };
+
+      // SERVICE_MODE: Ajouter services_ref
+      if (serviceRecordId) {
+        bookingFields.services_ref = [serviceRecordId];
+      }
 
       created = await airtableCreate(T_BOOKS, bookingFields);
     } catch (e) {

@@ -2,6 +2,9 @@
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+// SERVICE_MODE
+import { getServiceType, normalizeYYYYMMDD, makeServiceKey } from '@/lib/serviceKey'
+
 // Map restaurant slug to Airtable view
 const VIEW_MAP = {
   bistro: 'v_timeslots_bistro',
@@ -162,6 +165,67 @@ export async function GET(req) {
       to,
       sample: slots.slice(0, 3).map(s => ({ date: s.date_iso, time: s.time_24h, cap: s.remaining_capacity }))
     })
+
+    // SERVICE_MODE: Enrichir slots avec Services_API
+    const uniqueDates = [...new Set(slots.map(s => s.date_iso).filter(Boolean))]
+    if (uniqueDates.length > 0) {
+      const T_SERVICES = process.env.AIRTABLE_TABLE_SERVICES || 'Services_API'
+      const serviceKeys = []
+      uniqueDates.forEach(d => {
+        const dateNorm = normalizeYYYYMMDD(d)
+        serviceKeys.push(makeServiceKey(restaurantSlug, dateNorm, "midi"))
+        serviceKeys.push(makeServiceKey(restaurantSlug, dateNorm, "soir"))
+      })
+      
+      // SERVICE_MODE: Lookup unique avec OR()
+      const orCond = serviceKeys.map(k => `{service_key}='${k}'`).join(', ')
+      const serviceFormula = serviceKeys.length === 1 ? orCond : `OR(${orCond})`
+      
+      try {
+        const serviceUrl = `https://api.airtable.com/v0/${AT_BASE}/${encodeURIComponent(T_SERVICES)}`
+        const serviceParams = new URLSearchParams({ filterByFormula: serviceFormula, pageSize: '100' })
+        const serviceRes = await fetch(`${serviceUrl}?${serviceParams}`, {
+          headers: { Authorization: `Bearer ${AT_TOKEN}` },
+          cache: 'no-store'
+        })
+        
+        if (serviceRes.ok) {
+          const serviceData = await serviceRes.json()
+          const serviceMap = {}
+          (serviceData.records || []).forEach(rec => {
+            const sk = rec.fields?.service_key
+            if (sk) {
+              serviceMap[sk] = {
+                is_full: rec.fields.is_full ?? false,
+                remaining_capacity: rec.fields.remaining_capacity ?? null
+              }
+            }
+          })
+          
+          // SERVICE_MODE: Enrichir chaque slot
+          slots = slots.map(slot => {
+            if (!slot.time_24h || !slot.date_iso) return slot
+            const t = getServiceType(slot.time_24h)
+            const d = normalizeYYYYMMDD(slot.date_iso)
+            const k = makeServiceKey(restaurantSlug, d, t)
+            if (serviceMap[k]) {
+              return {
+                ...slot,
+                is_full: serviceMap[k].is_full,
+                ...(serviceMap[k].remaining_capacity !== null && { remaining_capacity: serviceMap[k].remaining_capacity })
+              }
+            } else {
+              console.warn('[SERVICE_MODE] service_not_found', k)
+            }
+            return slot
+          })
+          
+          console.log('[SERVICE_MODE] Enriched', slots.length, 'slots with', Object.keys(serviceMap).length, 'services')
+        }
+      } catch (err) {
+        console.warn('[SERVICE_MODE] Error fetching services:', err.message)
+      }
+    }
 
     return Response.json(
       { 
